@@ -1,0 +1,59 @@
+### Java ###
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+### Maven ###
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+.mvn/wrapper/maven-wrapper.jar
+
+### Gradle ###
+/build/
+.gradle/
+/out/
+!gradle/wrapper/gradle-wrapper.jar
+gradle-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea/
+/*.iml
+*.ipr
+*.iws
+out/
+
+### Eclipse ###
+.project
+.classpath
+.csettings/
+.settings/
+bin/
+
+### VS Code ###
+.vscode/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+logs/
+*.log
+hs_err_pid*.log
+
+### Environment files ###
+.env
+*.env
+
+### Spring Boot ###
+spring.log
+
+### Test Reports ###
+/test-output/
+/surefire-reports/
+
+### Generated Files ###
+/generated/

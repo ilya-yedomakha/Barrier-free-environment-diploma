@@ -102,9 +102,14 @@ public class LocationService {
 
         TypedQuery<Location> query = entityManager.createQuery(cq);
 
-        int limit = params.containsKey("limit") ? ((Number) params.get("limit")).intValue() : 20;
-        int page = params.containsKey("page") ? ((Number) params.get("page")).intValue() : 1;
+        int limit = 20;
+        int page = 1;
 
+        if (params.get("limit") != null && params.get("page") != null) {
+            limit = params.containsKey("limit") ? ((Number) params.get("limit")).intValue() : 20;
+            page = params.containsKey("page") ? ((Number) params.get("page")).intValue() : 1;
+
+        }
 
         int firstResult = (page - 1) * limit;
 
@@ -123,7 +128,7 @@ public class LocationService {
         return locationRepository.save(location);
     }
 
-    public Long getLocationsCount(){
+    public Long getLocationsCount() {
         return locationRepository.count();
     }
 

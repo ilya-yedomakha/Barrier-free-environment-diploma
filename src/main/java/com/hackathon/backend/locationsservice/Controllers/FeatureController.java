@@ -31,8 +31,7 @@ public class FeatureController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "error", "not_found",
-                    "message", "Локацію не знайдено",
-                    "details", null
+                    "message", "Локацію не знайдено"
             ));
         }
 

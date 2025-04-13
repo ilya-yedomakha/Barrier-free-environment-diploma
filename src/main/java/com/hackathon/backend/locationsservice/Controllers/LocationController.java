@@ -60,7 +60,15 @@ public class LocationController {
 
         List<Location> locations = locationService.dynamicSearch(filters);
         List<LocationReadDTO> locationReadDTOS = locations.stream().map(locationReadMapper::mapReadLocation).toList();
-        Pagination pagination = new Pagination(page, limit, countLocations, countLocations / limit);
+        Pagination pagination;
+        if (limit == null) {
+            limit = 20;
+        }
+        if (page == null){
+            page = 1;
+        }
+        pagination = new Pagination(page, limit, countLocations, countLocations / limit);
+
         LocationListViewDTO locationListViewDTOS = new LocationListViewDTO(locationReadDTOS, pagination);
         return ResponseEntity.ok(locationListViewDTOS);
     }

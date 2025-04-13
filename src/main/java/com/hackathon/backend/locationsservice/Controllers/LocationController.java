@@ -83,12 +83,12 @@ public class LocationController {
         LocationReadDTO locationReadDTO = locationReadMapper.mapReadLocation(newLocation);
         return ResponseEntity.ok(locationReadDTO);
     }
-//    @DeleteMapping("/{location_id}")
-//    ResponseEntity<?> delete(@PathVariable(name = "location_id") UUID locationId) {
-//        Location location = locationCreateMapper.mapCreateLocation(locationCreateDTO);
-//        Location newLocation = locationService.add(location);
-//        LocationReadDTO locationReadDTO = locationReadMapper.mapReadLocation(newLocation);
-//        return ResponseEntity.status(HttpStatus.OK).body("Успішно видалено елемент");
-//    }
 
+    @GetMapping("/test")
+    public ResponseEntity<?> testEndpoint() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "LocationController is working correctly");
+        return ResponseEntity.ok(response);
+    }
 }

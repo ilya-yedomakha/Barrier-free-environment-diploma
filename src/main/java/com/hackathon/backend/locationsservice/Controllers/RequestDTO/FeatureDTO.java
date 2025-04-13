@@ -15,6 +15,4 @@ public class FeatureDTO {
     private Boolean status;
     private Integer qualityRating;
     private Boolean standardsCompliance;
-//    private UUID createdBy;
-//    private LocalDateTime createdAt;
 }

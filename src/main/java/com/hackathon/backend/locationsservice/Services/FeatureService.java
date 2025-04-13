@@ -6,8 +6,10 @@ import com.hackathon.backend.locationsservice.Repositories.FeatureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,17 +17,22 @@ public class FeatureService {
 
     private final FeatureRepository featureRepository;
 
+    public Optional<Feature> getById(UUID featureId) {
+        return featureRepository.findById(featureId);
+    }
+
     public List<Feature> getAllFeaturesByLocationId(UUID locationId) {
         return featureRepository.findAllById(locationId);
     }
 
     private void setFeatureProperties(Feature feature, FeatureDTO featureDTO) {
-        feature.setType(featureDTO.getType());
-        feature.setSubtype(featureDTO.getSubtype());
-        feature.setDescription(featureDTO.getDescription());
-        feature.setStatus(featureDTO.getStatus());
-        feature.setQualityRating(featureDTO.getQualityRating());
-        feature.setStandardsCompliance(featureDTO.getStandardsCompliance());
+        if (featureDTO.getType() != null) feature.setType(featureDTO.getType());
+        if (featureDTO.getSubtype() != null) feature.setSubtype(featureDTO.getSubtype());
+        if (featureDTO.getDescription() != null) feature.setDescription(featureDTO.getDescription());
+        if (featureDTO.getStatus() != null) feature.setStatus(featureDTO.getStatus());
+        if (featureDTO.getQualityRating() != null) feature.setQualityRating(featureDTO.getQualityRating());
+        if (featureDTO.getStandardsCompliance() != null)
+            feature.setStandardsCompliance(featureDTO.getStandardsCompliance());
     }
 
     public Feature addFeature(UUID locationId, FeatureDTO featureDTO) {
@@ -38,21 +45,14 @@ public class FeatureService {
     }
 
 
-//
-//    public FeatureDTO updateFeature(UUID locationId, UUID featureId, FeatureDTO featureDTO) {
-//    }
-//
-//    public void deleteFeature(UUID locationId, UUID featureId) {
-//        featureRepository.deleteById(featureId);
-//        Feature feature = featureRepository.findById(featureId)
-//                .orElseThrow(EntityNotFoundException::new);
-//
-//        //TODO user priviliges
-//        featureRepository.delete(feature);
-//    }
-//
-//
-//    public Feature findById(UUID featureId) {
-//        return featureRepository.findById(featureId).orElseThrow(EntityNotFoundException::new);;
-//    }
+    public FeatureDTO updateFeature(Feature feature, FeatureDTO featureDTO) {
+        setFeatureProperties(feature, featureDTO);
+        feature.setUpdatedAt(LocalDateTime.now());
+        featureRepository.save(feature);
+        return featureDTO;
+    }
+
+    public void deleteFeature(UUID featureId) {
+        featureRepository.deleteById(featureId);
+    }
 }

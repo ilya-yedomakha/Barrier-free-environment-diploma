@@ -1,10 +1,10 @@
 package com.hackathon.backend.locationsservice.Controllers;
+
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.FeatureDTO;
 import com.hackathon.backend.locationsservice.Domain.Feature;
 import com.hackathon.backend.locationsservice.Domain.Location;
 import com.hackathon.backend.locationsservice.Services.FeatureService;
 import com.hackathon.backend.locationsservice.Services.LocationService;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("{locationId}/features")
+@RequestMapping("/api/locations/{locationId}/features")
 @RequiredArgsConstructor
 public class FeatureController {
     private final FeatureService featureService;
@@ -40,7 +40,7 @@ public class FeatureController {
 
     @PostMapping("")
     public ResponseEntity<?> addFeature(@PathVariable(name = "locationId") UUID locationId,
-                                        @RequestBody FeatureDTO featureDTO){
+                                        @RequestBody FeatureDTO featureDTO) {
         Optional<Location> location = locationService.getById(locationId);
         if (location.isPresent()) {
             Feature feature = featureService.addFeature(locationId, featureDTO);
@@ -48,33 +48,59 @@ public class FeatureController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "error", "not_found",
-                    "message", "Локацію не знайдено",
-                    "details", null
+                    "message", "Локацію не знайдено"
             ));
         }
     }
 
-//    @PutMapping("/{featureId}")
-//    public ResponseEntity<?> updateFeature(@PathVariable UUID locationId,
-//                                           @PathVariable UUID featureId,
-//                                           @RequestBody FeatureDTO featureDTO) {
-//        if (locationService.findById(locationId) == null) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-//                    "error", "not_found",
-//                    "message", "Локацію не знайдено",
-//                    "details", null
-//            ));
-//        }
-//
-//        FeatureDTO updatedFeature = featureService.updateFeature(locationId, featureId, featureDTO);
-//        return ResponseEntity.ok(updatedFeature);
-//    }
-//
-//    @DeleteMapping("/{featureId}")
-//    public ResponseEntity<?> deleteFeatureById(@PathVariable UUID locationId,
-//                                           @PathVariable UUID featureId){
-//
-//        featureService.deleteFeature(locationId, featureId);
-//        return ResponseEntity.ok(Map.of("message", "Елемент безбар'єрності успішно видалено"));
-//    }
+    @PutMapping("/{featureId}")
+    public ResponseEntity<?> updateFeature(@PathVariable(name = "locationId") UUID locationId,
+                                           @PathVariable(name = "featureId") UUID featureId,
+                                           @RequestBody FeatureDTO featureDTO) {
+        Optional<Location> location = locationService.getById(locationId);
+        if (location.isPresent()) {
+            Optional<Feature> feature = featureService.getById(featureId);
+            if (feature.isPresent()) {
+                //TODO QualityRating validation
+
+                featureService.updateFeature(feature.get(), featureDTO);
+                return ResponseEntity.ok(feature);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "error", "not_found",
+                        "message", "Елемент безбар'єрності не знайдено"
+                ));
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", "not_found",
+                    "message", "Локацію не знайдено"
+            ));
+        }
+    }
+
+    @DeleteMapping("/{featureId}")
+    public ResponseEntity<?> deleteFeatureById(@PathVariable(name = "locationId") UUID locationId,
+                                               @PathVariable(name = "featureId") UUID featureId) {
+        Optional<Location> location = locationService.getById(locationId);
+        if (location.isPresent()) {
+            Optional<Feature> feature = featureService.getById(featureId);
+            if (feature.isPresent()) {
+                featureService.deleteFeature(featureId);
+                return ResponseEntity.ok(Map.of("message", "Елемент безбар'єрності успішно видалено"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "error", "not_found",
+                        "message", "Елемент безбар'єрності не знайдено"
+                ));
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", "not_found",
+                    "message", "Локацію не знайдено"
+            ));
+        }
+    }
+
+
 }

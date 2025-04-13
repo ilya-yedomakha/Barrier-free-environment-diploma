@@ -1,12 +1,14 @@
 package com.hackathon.backend.locationsservice.Controllers;
 
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.VerificationDTO;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Create.LocationCreateDTO;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create.LocationCreateMapper;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationReadMapper;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationReadDTO;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
+import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
 import com.hackathon.backend.locationsservice.Domain.Location;
-import com.hackathon.backend.locationsservice.Domain.helper.filters.LocationFilter;
 import com.hackathon.backend.locationsservice.Services.LocationService;
-import com.hackathon.backend.locationsservice.Services.ServiceLocation;
-import com.hackathon.backend.locationsservice.exceptions.ValidationFilterException;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -22,22 +24,24 @@ import java.util.*;
 public class LocationController {
 
     private final LocationService locationService;
-    private final ServiceLocation serviceLocation;
+    private final LocationCreateMapper locationCreateMapper;
+    private final LocationReadMapper locationReadMapper;
 
     @GetMapping()
     public ResponseEntity<?> getLocations(
-            @RequestParam(required = false) Double lat,
-            @RequestParam(required = false) Double lng,
-            @RequestParam(required = false) Integer radius,
-            @RequestParam(required = false) String types,
-            @RequestParam(required = false) String features,
-            @RequestParam(required = false) @Min(1) @Max(5) Integer minScore,
-            @RequestParam(required = false) LocationStatusEnum status,
-            @RequestParam(required = false) Boolean verified,
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "20") @Min(1) @Max(100) Integer limit
-    ){
+            @RequestParam(name = "lat", required = false) Double lat,
+            @RequestParam(name = "lng", required = false) Double lng,
+            @RequestParam(name = "radius", required = false) Integer radius,
+            @RequestParam(name = "types", required = false) String types,
+            @RequestParam(name = "features", required = false) String features,
+            @RequestParam(name = "minScore", required = false) @Min(1) @Max(5) Integer minScore,
+            @RequestParam(name = "status", required = false) LocationStatusEnum status,
+            @RequestParam(name = "verified", required = false) Boolean verified,
+            @RequestParam(name = "query", required = false) String query,
+            @RequestParam(name = "limit", required = false) Integer limit,
+            @RequestParam(name = "page", required = false) @Max(100) Integer page
+
+    ) {
         Map<String, Object> filters = new HashMap<>();
 
         if (lat != null) filters.put("lat", lat);
@@ -52,15 +56,20 @@ public class LocationController {
         filters.put("page", page);
         filters.put("limit", limit);
 
-        List<Location> locations = serviceLocation.dynamicSearch(filters);
-        return ResponseEntity.ok(locations);
+        Long countLocations = locationService.getLocationsCount();
+
+        List<Location> locations = locationService.dynamicSearch(filters);
+        List<LocationReadDTO> locationReadDTOS = locations.stream().map(locationReadMapper::mapReadLocation).toList();
+        Pagination pagination = new Pagination(page, limit, countLocations, countLocations / limit);
+        LocationListViewDTO locationListViewDTOS = new LocationListViewDTO(locationReadDTOS, pagination);
+        return ResponseEntity.ok(locationListViewDTOS);
     }
 
-    @GetMapping("/{ocation_id}/")
-    public ResponseEntity<?> getLocationById(@PathVariable(name = "ocation_id") UUID locationId) {
+    @GetMapping("/{location_id}/")
+    public ResponseEntity<?> getLocationById(@PathVariable(name = "location_id") UUID locationId) {
         Optional<Location> location = locationService.getById(locationId);
         if (location.isPresent()) {
-            return ResponseEntity.ok(location.get());
+            return ResponseEntity.ok(locationReadMapper.mapReadLocation(location.get()));
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Location with ID " + locationId + " was not found.");
@@ -68,10 +77,18 @@ public class LocationController {
     }
 
     @PostMapping
-    ResponseEntity<?> save(@RequestBody Location location){
+    ResponseEntity<?> save(@RequestBody LocationCreateDTO locationCreateDTO) {
+        Location location = locationCreateMapper.mapCreateLocation(locationCreateDTO);
         Location newLocation = locationService.add(location);
-        return ResponseEntity.ok(newLocation);
+        LocationReadDTO locationReadDTO = locationReadMapper.mapReadLocation(newLocation);
+        return ResponseEntity.ok(locationReadDTO);
     }
-
+//    @DeleteMapping("/{location_id}")
+//    ResponseEntity<?> delete(@PathVariable(name = "location_id") UUID locationId) {
+//        Location location = locationCreateMapper.mapCreateLocation(locationCreateDTO);
+//        Location newLocation = locationService.add(location);
+//        LocationReadDTO locationReadDTO = locationReadMapper.mapReadLocation(newLocation);
+//        return ResponseEntity.status(HttpStatus.OK).body("Успішно видалено елемент");
+//    }
 
 }

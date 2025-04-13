@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("{locationId}/reviews")
+@RequestMapping("/api/locations/{locationId}/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
     private final ReviewService reviewService;

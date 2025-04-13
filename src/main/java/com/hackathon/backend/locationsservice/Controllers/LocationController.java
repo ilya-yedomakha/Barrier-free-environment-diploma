@@ -56,8 +56,8 @@ public class LocationController {
         return ResponseEntity.ok(locations);
     }
 
-    @GetMapping("/{ocation_id}/")
-    public ResponseEntity<?> getLocationById(@PathVariable(name = "ocation_id") UUID locationId) {
+    @GetMapping("/{location_id}")
+    public ResponseEntity<?> getLocationById(@PathVariable(name = "location_id") UUID locationId) {
         Optional<Location> location = locationService.getById(locationId);
         if (location.isPresent()) {
             return ResponseEntity.ok(location.get());
@@ -72,6 +72,12 @@ public class LocationController {
         Location newLocation = locationService.add(location);
         return ResponseEntity.ok(newLocation);
     }
-
-
+    
+    @GetMapping("/test")
+    public ResponseEntity<?> testEndpoint() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "LocationController is working correctly");
+        return ResponseEntity.ok(response);
+    }
 }

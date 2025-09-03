@@ -22,7 +22,7 @@ public class FeatureService {
     }
 
     public List<Feature> getAllFeaturesByLocationId(UUID locationId) {
-        return featureRepository.findAllById(locationId);
+        return featureRepository.findAllByLocationId(locationId);
     }
 
     private void setFeatureProperties(Feature feature, FeatureDTO featureDTO) {

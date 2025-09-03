@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface FeatureRepository extends JpaRepository<Feature, UUID> {
-    List<Feature> findAllById(UUID locationId);
+    List<Feature> findAllByLocationId(UUID locationId);
 }

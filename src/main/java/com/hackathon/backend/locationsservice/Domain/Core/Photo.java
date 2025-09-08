@@ -1,4 +1,4 @@
-package com.hackathon.backend.locationsservice.Domain;
+package com.hackathon.backend.locationsservice.Domain.Core;
 
 import com.hackathon.backend.locationsservice.Domain.Enums.ModerationStatusEnum;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;

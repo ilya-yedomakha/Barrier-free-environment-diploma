@@ -1,6 +1,6 @@
-package com.hackathon.backend.locationsservice.Domain.BarrierlessCriteriaScope;
+package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
-import com.hackathon.backend.locationsservice.Domain.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -19,7 +19,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BarrierlessCriteriaType {
+public class LocationType {
     @Id
     @GeneratedValue
     private UUID id;
@@ -33,11 +33,12 @@ public class BarrierlessCriteriaType {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy="barrierlessCriteriaType")
-    private HashSet<LocationType> locationTypes;
+    @OneToMany(mappedBy = "type")
+    private Set<Location> locations;
 
-    @OneToMany(mappedBy="barrierlessCriteriaType")
-    private HashSet<BarrierlessCriteria> BarrierlessCriterias;
+    @ManyToOne
+    @JoinColumn(name="barrierless_criteria_type_id", nullable = false)
+    private BarrierlessCriteriaType barrierlessCriteriaType;
 
     @NotNull
     @Column(nullable = false)

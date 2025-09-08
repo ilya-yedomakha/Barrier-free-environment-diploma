@@ -1,10 +1,10 @@
 package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create;
 
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Create.LocationCreateDTO;
-import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 
 
-import com.hackathon.backend.locationsservice.Domain.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationTypeService;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -12,8 +12,6 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +36,6 @@ public class LocationCreateMapper {
                         "LocationType with id " + dto.type + " not found"
                 ));
         location.setType(locationType);
-        location.setCategory(dto.category);
         location.setDescription(dto.description);
         location.setContacts(dto.contacts);
         location.setWorkingHours(dto.workingHours);

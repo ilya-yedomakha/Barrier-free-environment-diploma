@@ -1,4 +1,4 @@
-package com.hackathon.backend.locationsservice.Domain.BarrierlessCriteriaScope;
+package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope;
 
 import jakarta.persistence.Embeddable;
 

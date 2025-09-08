@@ -1,11 +1,10 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
-import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.hackathon.backend.locationsservice.Domain.Feature;
 import com.hackathon.backend.locationsservice.Domain.Verification;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -53,26 +52,28 @@ public class LocationService {
             );
         }
 
-        if (params.containsKey("minScore")) {
-            Integer minScore = (Integer) params.get("minScore");
+//TODO:  CHANGE TO FIND BY MIN OVERALL ACCESSIBILITY SCORE
 
-            Subquery<UUID> subquery = cq.subquery(UUID.class);
-            Root<Feature> featureRoot = subquery.from(Feature.class);
-            subquery.select(featureRoot.get("locationId"))
-                    .where(cb.greaterThanOrEqualTo(featureRoot.get("qualityRating"), minScore));
-
-            predicates.add(locationRoot.get("id").in(subquery));
-        }
-
-        if (params.containsKey("features")) {
-            String[] features = ((String) params.get("features")).split(",");
-            Subquery<UUID> featureSub = cq.subquery(UUID.class);
-            Root<Feature> featureRoot = featureSub.from(Feature.class);
-            featureSub.select(featureRoot.get("locationId"))
-                    .where(featureRoot.get("type").in(Arrays.asList(features)));
-
-            predicates.add(locationRoot.get("id").in(featureSub));
-        }
+//        if (params.containsKey("minScore")) {
+//            Integer minScore = (Integer) params.get("minScore");
+//
+//            Subquery<UUID> subquery = cq.subquery(UUID.class);
+//            Root<Feature> featureRoot = subquery.from(Feature.class);
+//            subquery.select(featureRoot.get("locationId"))
+//                    .where(cb.greaterThanOrEqualTo(featureRoot.get("qualityRating"), minScore));
+//
+//            predicates.add(locationRoot.get("id").in(subquery));
+//        }
+//
+//        if (params.containsKey("features")) {
+//            String[] features = ((String) params.get("features")).split(",");
+//            Subquery<UUID> featureSub = cq.subquery(UUID.class);
+//            Root<Feature> featureRoot = featureSub.from(Feature.class);
+//            featureSub.select(featureRoot.get("locationId"))
+//                    .where(featureRoot.get("type").in(Arrays.asList(features)));
+//
+//            predicates.add(locationRoot.get("id").in(featureSub));
+//        }
 
         if (params.containsKey("verified") && Boolean.TRUE.equals(params.get("verified"))) {
             Subquery<UUID> verificationSub = cq.subquery(UUID.class);

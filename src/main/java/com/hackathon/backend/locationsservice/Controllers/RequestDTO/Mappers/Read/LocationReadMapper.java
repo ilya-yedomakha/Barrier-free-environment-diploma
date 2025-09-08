@@ -2,7 +2,7 @@ package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Re
 
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationReadDTO;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
-import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,7 +14,6 @@ public class LocationReadMapper {
         locationReadDTO.setAddress(location.getAddress());
         locationReadDTO.setCoordinates(new Coordinates(location.getCoordinates().getX(), location.getCoordinates().getY()));
         locationReadDTO.setType(location.getType().getId());
-        locationReadDTO.setCategory(location.getCategory());
         locationReadDTO.setDescription(location.getDescription());
         locationReadDTO.setContacts(location.getContacts());
         locationReadDTO.setWorkingHours(location.getWorkingHours());

@@ -1,4 +1,4 @@
-package com.hackathon.backend.locationsservice.Controllers;
+package com.hackathon.backend.locationsservice.Controllers.LocationScope;
 
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Create.LocationCreateDTO;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create.LocationCreateMapper;
@@ -7,7 +7,7 @@ import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.Locati
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
-import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

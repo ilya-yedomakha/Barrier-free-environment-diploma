@@ -1,4 +1,4 @@
-package com.hackathon.backend.locationsservice.Domain;
+package com.hackathon.backend.locationsservice.Domain.Core;
 
 import jakarta.persistence.*;
 

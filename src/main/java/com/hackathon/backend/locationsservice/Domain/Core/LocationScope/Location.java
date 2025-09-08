@@ -1,4 +1,4 @@
-package com.hackathon.backend.locationsservice.Domain.LocationScope;
+package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
@@ -44,12 +44,9 @@ public class Location {
     private Point coordinates;
 
     @NotNull
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "location_type_id", referencedColumnName = "id", nullable = false)
     private LocationType type;
-
-    @Column(length = 100)
-    private String category;
 
     @Column(columnDefinition = "TEXT")
     private String description;

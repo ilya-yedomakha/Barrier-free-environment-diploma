@@ -1,9 +1,7 @@
-package com.hackathon.backend.locationsservice.Domain;
+package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope;
 
-import com.hackathon.backend.locationsservice.Domain.Enums.FeatureTypeEnum;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -12,45 +10,34 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
+@Table(name = "LocationTypes")
 @Getter
 @Setter
-@Table(name = "accessibility_features")
-public class Feature {
+@AllArgsConstructor
+@NoArgsConstructor
+public class BarrierlessCriteriaType {
     @Id
     @GeneratedValue
     private UUID id;
 
     @NotNull
-    @Column(nullable = false)
-    private UUID locationId;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private FeatureTypeEnum type;
-
     @NotBlank
-    @Column(length = 100)
-    private String subtype;
+    @Column(length = 255, nullable = false)
+    private String name;
 
     @NotBlank
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @NotNull
-    @Column(nullable = false)
-    private Boolean status;
+    @OneToMany(mappedBy="barrierlessCriteriaType")
+    private Set<LocationType> locationTypes;
 
-    @Min(1)
-    @Max(5)
-    private Integer qualityRating;
-
-    private Boolean standardsCompliance;
+    @OneToMany(mappedBy="barrierlessCriteriaType")
+    private Set<BarrierlessCriteria> BarrierlessCriterias;
 
     @NotNull
     @Column(nullable = false)

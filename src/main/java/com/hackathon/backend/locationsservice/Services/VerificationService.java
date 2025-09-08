@@ -1,7 +1,5 @@
 package com.hackathon.backend.locationsservice.Services;
 
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.VerificationDTO;
-import com.hackathon.backend.locationsservice.Domain.Feature;
 import com.hackathon.backend.locationsservice.Domain.Verification;
 import com.hackathon.backend.locationsservice.Repositories.VerificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +8,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor

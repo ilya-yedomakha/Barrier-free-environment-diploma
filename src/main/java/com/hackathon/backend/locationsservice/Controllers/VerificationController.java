@@ -1,9 +1,8 @@
 package com.hackathon.backend.locationsservice.Controllers;
 
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.VerificationDTO;
-import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Verification;
-import com.hackathon.backend.locationsservice.Services.FeatureService;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import com.hackathon.backend.locationsservice.Services.VerificationService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import java.util.UUID;
 public class VerificationController {
 
     private final VerificationService verificationService;
-    private final FeatureService featureService;
     private final LocationService locationService;
 
     @PostMapping("/{locationId}/verifications")

@@ -1,7 +1,7 @@
-package com.hackathon.backend.locationsservice.Domain.BarrierlessCriteriaScope;
+package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope;
 
-import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
-import com.hackathon.backend.locationsservice.Domain.User;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.User;
 import jakarta.persistence.*;
 
 @Entity

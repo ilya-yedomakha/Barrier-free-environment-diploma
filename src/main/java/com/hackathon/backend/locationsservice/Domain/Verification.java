@@ -1,9 +1,6 @@
 package com.hackathon.backend.locationsservice.Domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jdk.jfr.SettingDefinition;
 import lombok.AllArgsConstructor;
@@ -20,6 +17,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "verifications")
 public class Verification {
 
     @Id

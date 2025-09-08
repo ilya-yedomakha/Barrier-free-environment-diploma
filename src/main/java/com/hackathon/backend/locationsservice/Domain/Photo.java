@@ -20,6 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
+@Table(name = "photos")
 public class Photo {
 
     @Id

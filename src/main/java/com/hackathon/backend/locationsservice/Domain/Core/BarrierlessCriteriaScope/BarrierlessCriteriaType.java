@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "LocationTypes")
+@Table(name = "BarrierlessCriteriaTypes")
 @Getter
 @Setter
 @AllArgsConstructor

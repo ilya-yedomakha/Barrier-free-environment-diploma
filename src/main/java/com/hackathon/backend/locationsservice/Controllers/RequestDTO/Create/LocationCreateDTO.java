@@ -1,7 +1,6 @@
 package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Create;
 
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
-import com.hackathon.backend.locationsservice.Domain.Enums.LocationTypeEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
@@ -30,9 +29,8 @@ public class LocationCreateDTO {
     public Coordinates coordinates;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    public LocationTypeEnum type;
+    public UUID type;
 
     @Column(length = 100)
     public String category;

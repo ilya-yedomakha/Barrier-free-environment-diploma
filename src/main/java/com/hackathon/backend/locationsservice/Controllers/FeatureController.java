@@ -2,9 +2,9 @@ package com.hackathon.backend.locationsservice.Controllers;
 
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.FeatureDTO;
 import com.hackathon.backend.locationsservice.Domain.Feature;
-import com.hackathon.backend.locationsservice.Domain.Location;
+import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Services.FeatureService;
-import com.hackathon.backend.locationsservice.Services.LocationService;
+import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

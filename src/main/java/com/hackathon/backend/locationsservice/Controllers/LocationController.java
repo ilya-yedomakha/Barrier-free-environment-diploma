@@ -7,8 +7,8 @@ import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.Locati
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
-import com.hackathon.backend.locationsservice.Domain.Location;
-import com.hackathon.backend.locationsservice.Services.LocationService;
+import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;

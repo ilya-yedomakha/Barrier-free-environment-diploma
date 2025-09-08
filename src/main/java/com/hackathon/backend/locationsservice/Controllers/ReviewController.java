@@ -1,6 +1,6 @@
 package com.hackathon.backend.locationsservice.Controllers;
 
-import com.hackathon.backend.locationsservice.Services.LocationService;
+import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import com.hackathon.backend.locationsservice.Services.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;

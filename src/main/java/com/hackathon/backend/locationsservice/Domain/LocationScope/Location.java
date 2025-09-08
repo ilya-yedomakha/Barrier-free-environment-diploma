@@ -1,7 +1,6 @@
-package com.hackathon.backend.locationsservice.Domain;
+package com.hackathon.backend.locationsservice.Domain.LocationScope;
 
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
-import com.hackathon.backend.locationsservice.Domain.Enums.LocationTypeEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
@@ -45,9 +44,9 @@ public class Location {
     private Point coordinates;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
-    private LocationTypeEnum type;
+    @OneToOne
+    @JoinColumn(name = "location_type_id", referencedColumnName = "id", nullable = false)
+    private LocationType type;
 
     @Column(length = 100)
     private String category;

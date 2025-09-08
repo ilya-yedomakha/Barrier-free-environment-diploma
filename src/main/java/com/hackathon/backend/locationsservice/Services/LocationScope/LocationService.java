@@ -1,7 +1,7 @@
-package com.hackathon.backend.locationsservice.Services;
+package com.hackathon.backend.locationsservice.Services.LocationScope;
 
-import com.hackathon.backend.locationsservice.Domain.Location;
-import com.hackathon.backend.locationsservice.Repositories.LocationRepository;
+import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

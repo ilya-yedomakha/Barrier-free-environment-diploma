@@ -1,11 +1,9 @@
 package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read;
 
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
-import com.hackathon.backend.locationsservice.Domain.Enums.LocationTypeEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
-import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +25,7 @@ public class LocationReadDTO {
 
     public Coordinates coordinates;
 
-    public LocationTypeEnum type;
+    public UUID type;
 
     public String category;
 

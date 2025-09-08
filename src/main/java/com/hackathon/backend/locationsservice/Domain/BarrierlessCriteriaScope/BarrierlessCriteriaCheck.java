@@ -1,25 +1,27 @@
-package com.hackathon.backend.locationsservice.Domain;
+package com.hackathon.backend.locationsservice.Domain.BarrierlessCriteriaScope;
 
+import com.hackathon.backend.locationsservice.Domain.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.User;
 import jakarta.persistence.*;
 
 @Entity
-public class BarrierCriteriaCheck {
+public class BarrierlessCriteriaCheck {
 
     @EmbeddedId
-    private BarrierCriteriaCheckId barrierCriteriaCheckId;
+    private BarrierlessCriteriaCheckEmbeddedId barrierlessCriteriaCheckId;
 
     @MapsId("locationId")
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "location_id", nullable = false, updatable = false)
     private Location location;
 
     @MapsId("barrierlessCriteriaId")
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "barrierless_criteria_id", nullable = false, updatable = false)
     private BarrierlessCriteria barrierlessCriteria;
 
-    @MapsId
-    @OneToOne
+    @MapsId("userId")
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 

@@ -1,8 +1,8 @@
 package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope;
 
-
-import com.hackathon.backend.locationsservice.Domain.Enums.BarrierlessCriteriaRank;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,27 +10,34 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "barrierless_criteria")
+@Table(name = "BarrierlessCriteriaGroups")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BarrierlessCriteria {
-
+public class BarrierlessCriteriaGroup {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue
     private UUID id;
 
+    @NotNull
+    @NotBlank
+    @Column(length = 255, nullable = false)
     private String name;
 
+    @NotBlank
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name="barrierless_criteria_type_id", nullable = false)
-    private BarrierlessCriteriaType barrierlessCriteriaType;
+    @OneToMany(mappedBy="barrierlessCriteriaGroup")
+    private Set<LocationType> locationTypes;
+
+    @OneToMany(mappedBy="barrierlessCriteriaGroup")
+    private Set<BarrierlessCriteriaType> barrierlessCriteriaTypes;
 
     @NotNull
     @Column(nullable = false)
@@ -43,8 +50,4 @@ public class BarrierlessCriteria {
     @NotNull
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @Enumerated
-    @NotNull
-    private BarrierlessCriteriaRank barrierlessCriteriaRank;
 }

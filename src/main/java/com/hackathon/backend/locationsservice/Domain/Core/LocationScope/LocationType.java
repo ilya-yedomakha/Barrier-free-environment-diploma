@@ -1,5 +1,6 @@
 package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -37,8 +38,8 @@ public class LocationType {
     private Set<Location> locations;
 
     @ManyToOne
-    @JoinColumn(name="barrierless_criteria_type_id", nullable = false)
-    private BarrierlessCriteriaType barrierlessCriteriaType;
+    @JoinColumn(name="barrierless_criteria_group_id", nullable = false)
+    private BarrierlessCriteriaGroup barrierlessCriteriaGroup;
 
     @NotNull
     @Column(nullable = false)

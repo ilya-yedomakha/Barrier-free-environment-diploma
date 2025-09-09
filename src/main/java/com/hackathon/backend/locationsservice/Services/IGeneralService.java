@@ -1,7 +1,4 @@
-package com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope.interfaces;
-
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
-import jakarta.persistence.Entity;
+package com.hackathon.backend.locationsservice.Services;
 
 import java.util.List;
 import java.util.Optional;

@@ -27,7 +27,7 @@ public class BarrierlessCriteriaCheck {
 
     private String comment;
 
-    private boolean barrierFree;
+    private boolean hasIssue;
 
     private boolean barrierFreeRating;
 }

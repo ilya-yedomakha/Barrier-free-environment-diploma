@@ -33,8 +33,9 @@ public class BarrierlessCriteriaType {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy="barrierlessCriteriaType")
-    private Set<LocationType> locationTypes;
+    @ManyToOne
+    @JoinColumn(name="barrierless_criteria_group_id", nullable = false)
+    private BarrierlessCriteriaGroup barrierlessCriteriaGroup;
 
     @OneToMany(mappedBy="barrierlessCriteriaType")
     private Set<BarrierlessCriteria> BarrierlessCriterias;

@@ -28,7 +28,7 @@ public class BarrierlessCriteriaCheck extends BaseEntity {
 
     private String comment;
 
-    private boolean barrierFree;
+    private boolean hasIssue;
 
     private boolean barrierFreeRating;
 }

@@ -3,7 +3,7 @@ package com.hackathon.backend.locationsservice.Controllers.LocationScope;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Create.LocationCreateDTO;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create.LocationCreateMapper;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationReadMapper;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationReadDTO;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;

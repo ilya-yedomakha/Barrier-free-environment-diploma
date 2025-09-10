@@ -33,7 +33,7 @@ public class LocationCreateMapper {
         LocationType locationType = locationTypeService
                 .getLocationTypeById(dto.type)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "LocationType with id " + dto.type + " not found"
+                        "LocationType with id " + dto.type + " not found while trying to convert DTO into LocationType"
                 ));
         location.setType(locationType);
         location.setDescription(dto.description);

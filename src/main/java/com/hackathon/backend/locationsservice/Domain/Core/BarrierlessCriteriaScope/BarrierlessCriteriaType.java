@@ -1,5 +1,6 @@
 package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope;
 
+import com.hackathon.backend.locationsservice.Domain.Core.Base.RegularEntity;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -19,10 +20,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BarrierlessCriteriaType {
-    @Id
-    @GeneratedValue
-    private UUID id;
+public class BarrierlessCriteriaType extends RegularEntity {
 
     @NotNull
     @NotBlank

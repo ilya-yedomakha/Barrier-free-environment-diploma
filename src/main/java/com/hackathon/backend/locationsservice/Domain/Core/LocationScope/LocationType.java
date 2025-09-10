@@ -2,6 +2,7 @@ package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.RegularEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,10 +21,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LocationType {
-    @Id
-    @GeneratedValue
-    private UUID id;
+public class LocationType extends RegularEntity {
 
     @NotNull
     @NotBlank

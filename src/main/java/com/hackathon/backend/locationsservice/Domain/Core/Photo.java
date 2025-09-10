@@ -1,5 +1,6 @@
 package com.hackathon.backend.locationsservice.Domain.Core;
 
+import com.hackathon.backend.locationsservice.Domain.Core.Base.RegularEntity;
 import com.hackathon.backend.locationsservice.Domain.Enums.ModerationStatusEnum;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
@@ -21,11 +22,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "photos")
-public class Photo {
-
-    @Id
-    @GeneratedValue
-    private UUID id;
+public class Photo extends RegularEntity {
 
     @NotNull
     private UUID locationId;

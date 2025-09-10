@@ -1,5 +1,6 @@
-package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read;
+package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope;
 
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.Base.BaseRegularReadDTO;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
@@ -16,8 +17,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LocationReadDTO {
-    public UUID id;
+public class LocationReadDTO extends BaseRegularReadDTO {
 
     public String name;
 

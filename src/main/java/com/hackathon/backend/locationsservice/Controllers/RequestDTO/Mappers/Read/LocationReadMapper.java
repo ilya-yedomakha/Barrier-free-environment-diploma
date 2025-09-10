@@ -1,6 +1,6 @@
 package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read;
 
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationReadDTO;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import org.springframework.stereotype.Service;

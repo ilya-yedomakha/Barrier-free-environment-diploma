@@ -13,4 +13,6 @@ public class BarrierlessCriteriaTypeService extends GeneralService<BarrierlessCr
     public BarrierlessCriteriaTypeService(BarrierlessCriteriaTypeRepository repository) {
         super(repository);
     }
+
+
 }

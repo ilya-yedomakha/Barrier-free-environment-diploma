@@ -13,7 +13,7 @@ public interface IBarrierlessCriteriaCheckService {
     void delete(BarrierlessCriteriaCheck criteria);
     void delete(UUID criteriaId);
     Optional<BarrierlessCriteriaCheck> findById(UUID id);
-    List<BarrierlessCriteriaCheck> getAll();
+    List<BarrierlessCriteriaCheck> findAll();
 
     List<BarrierlessCriteriaCheck> findAllBarrierCriteriaCheckByLocationId(UUID locationId);
 

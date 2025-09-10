@@ -38,8 +38,8 @@ public class BarrierlessCriteriaCheckService implements IBarrierlessCriteriaChec
 
 
     @Override
-    public List<BarrierlessCriteriaCheck> getAll() {
-        return List.of();
+    public List<BarrierlessCriteriaCheck> findAll() {
+        return barrierlessCriteriaCheckRepository.findAll();
     }
 
     @Override

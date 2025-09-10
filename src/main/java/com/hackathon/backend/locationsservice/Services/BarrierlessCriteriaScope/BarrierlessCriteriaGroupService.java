@@ -14,4 +14,6 @@ public class BarrierlessCriteriaGroupService extends GeneralService<BarrierlessC
     BarrierlessCriteriaGroupService(BarrierlessCriteriaGroupRepository repository){
         super(repository);
     }
+
+
 }

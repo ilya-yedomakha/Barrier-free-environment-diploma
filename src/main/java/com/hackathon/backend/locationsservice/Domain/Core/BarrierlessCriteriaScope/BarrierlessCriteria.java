@@ -26,6 +26,7 @@ public class BarrierlessCriteria {
 
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @ManyToOne

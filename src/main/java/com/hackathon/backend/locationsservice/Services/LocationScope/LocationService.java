@@ -1,25 +1,28 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationScope.LocationReadMapper;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
-import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
-import jakarta.persistence.TypedQuery;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import com.hackathon.backend.locationsservice.Domain.Verification;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
+import com.hackathon.backend.locationsservice.Services.GeneralService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
-public class LocationService {
+public class LocationService extends GeneralService<LocationReadMapper, LocationReadDTO, Location, LocationRepository> {
 
-    private final LocationRepository locationRepository;
+    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper){
+        super(locationRepository,Location.class,locationReadMapper);
+    }
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -120,17 +123,14 @@ public class LocationService {
         return query.getResultList();
     }
 
-    public Optional<Location> getById(UUID locationId) {
-        return locationRepository.findById(locationId);
-    }
 
     public Location add(Location location) {
 
-        return locationRepository.save(location);
+        return repository.save(location);
     }
 
     public Long getLocationsCount() {
-        return locationRepository.count();
+        return repository.count();
     }
 
 

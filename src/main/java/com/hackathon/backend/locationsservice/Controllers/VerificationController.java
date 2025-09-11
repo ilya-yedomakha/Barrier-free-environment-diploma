@@ -1,8 +1,10 @@
 package com.hackathon.backend.locationsservice.Controllers;
 
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.VerificationDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Verification;
+import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import com.hackathon.backend.locationsservice.Services.VerificationService;
 import lombok.RequiredArgsConstructor;
@@ -32,19 +34,24 @@ public class VerificationController {
         return ResponseEntity.ok(true);
 
     }
-
+/* // provide verification result pattern
     @GetMapping("/{locationId}/verifications")
     public ResponseEntity<?> getVerifications(@PathVariable(name = "locationId") UUID locationId) {
-        Optional<Location> location = locationService.getById(locationId);
-        if (location.isPresent()) {
-            List<Verification> verification = verificationService.getAllVerificationsById(locationId);
-            return ResponseEntity.ok(verification);
+        Result<Location, LocationReadDTO> result = locationService.getById(locationId);
+        if (result.isSuccess()) {
+            if (result.entity != null) {
+                Result<Verification,VerificationDTO> verification = verificationService.getAllVerificationsById(locationId);
+                return ResponseEntity.ok(verification);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "error", "not_found",
+                        "message", "Локацію не знайдено"
+                ));
+            }
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "error", "not_found",
-                    "message", "Локацію не знайдено"
-            ));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result.getError());
         }
-    }
+
+    }*/
 
 }

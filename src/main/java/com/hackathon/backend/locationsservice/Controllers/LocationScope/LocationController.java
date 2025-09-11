@@ -5,9 +5,10 @@ import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Cre
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationScope.LocationReadMapper;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
-import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -16,7 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/locations")
@@ -75,12 +79,11 @@ public class LocationController {
 
     @GetMapping("/{location_id}/")
     public ResponseEntity<?> getLocationById(@PathVariable(name = "location_id") UUID locationId) {
-        Optional<Location> location = locationService.getById(locationId);
-        if (location.isPresent()) {
-            return ResponseEntity.ok(locationReadMapper.toDto(location.get()));
+        Result<Location, LocationReadDTO> Result = locationService.getById(locationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Location with ID " + locationId + " was not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
         }
     }
 

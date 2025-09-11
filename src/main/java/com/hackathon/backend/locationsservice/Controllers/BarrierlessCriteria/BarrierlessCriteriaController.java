@@ -25,12 +25,12 @@ public class BarrierlessCriteriaController {
 
 
     @GetMapping("/{barrierless_criteria_id}/")
-    public ResponseEntity<?> getLocationById(@PathVariable(name = "barrierless_criteria_id") UUID barrierlessCriteriaId) {
+    public ResponseEntity<?> getBarrierlessCriteriaById(@PathVariable(name = "barrierless_criteria_id") UUID barrierlessCriteriaId) {
         Result<BarrierlessCriteria, BarrierlessCriteriaReadDTO> Result = barrierlessCriteriaService.getById(barrierlessCriteriaId);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
         } else {
-            return ResponseEntity.badRequest().body(Result.getError());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
         }
     }
 }

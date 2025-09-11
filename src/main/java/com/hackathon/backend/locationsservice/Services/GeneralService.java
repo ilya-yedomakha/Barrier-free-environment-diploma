@@ -1,5 +1,10 @@
 package com.hackathon.backend.locationsservice.Services;
 
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Base.BaseMapper;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.Base.BaseReadDTO;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
+import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
+import com.hackathon.backend.locationsservice.Result.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -8,9 +13,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public abstract class GeneralService<T,U extends JpaRepository<T,UUID>> implements IGeneralService<T> {
+public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO extends BaseReadDTO, T extends BaseEntity,U extends JpaRepository<T,UUID>> implements IGeneralService<T> {
 
     protected final U repository;
+    protected final Class<T> type;
+    protected final Tmapper mapper;
 
     @Override
     public T save(T entity) {
@@ -27,6 +34,15 @@ public abstract class GeneralService<T,U extends JpaRepository<T,UUID>> implemen
         repository.deleteById(entityId);
     }
 
+    public Result<T, TDTO> getById(UUID entityId) {
+        Optional<T> entity = repository.findById(entityId);
+        if (entity.isPresent()){
+            Result<T, TDTO> res = Result.success();
+            res.setEntity(entity.get());
+            res.setEntityDTO(mapper.toDto(entity.get()));
+            return res;
+        } else return Result.failure(EntityError.notFound(type,entityId));
+    }
     @Override
     public Optional<T> findById(UUID id) {
         return repository.findById(id);

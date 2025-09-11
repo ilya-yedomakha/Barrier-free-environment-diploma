@@ -1,6 +1,7 @@
-package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create;
+package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create.LocationScope;
 
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Create.LocationCreateDTO;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Base.Create.BaseCreateMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 
 
@@ -15,11 +16,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class LocationCreateMapper {
+public class LocationCreateMapper implements BaseCreateMapper<Location, LocationCreateDTO> {
+
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
     private final LocationTypeService locationTypeService;
 
-    public Location mapCreateLocation(LocationCreateDTO dto) {
+    @Override
+    public Location toEntity(LocationCreateDTO dto) {
         Point coordinates = null;
         if (dto.coordinates != null) {
             Coordinate coord = new Coordinate(dto.coordinates.getLat(), dto.coordinates.getLng());
@@ -49,5 +52,10 @@ public class LocationCreateMapper {
         location.setRejectionReason(dto.rejectionReason);
 
         return location;
+    }
+
+    @Override
+    public LocationCreateDTO toDto(Location entity) {
+        throw new UnsupportedOperationException("Not implemented in CreateMapper");
     }
 }

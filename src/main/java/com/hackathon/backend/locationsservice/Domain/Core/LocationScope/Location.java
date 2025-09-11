@@ -80,7 +80,6 @@ public class Location extends RegularEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @NotNull
     @Column(nullable = false)
     private LocalDateTime lastVerifiedAt;
 

@@ -1,13 +1,15 @@
-package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read;
+package com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationScope;
 
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Base.Read.BaseReadMapper;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
-import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import org.springframework.stereotype.Service;
 
 @Service
-public class LocationReadMapper {
-    public LocationReadDTO mapReadLocation(Location location) {
+public class LocationReadMapper implements BaseReadMapper<Location, LocationReadDTO>{
+    @Override
+    public LocationReadDTO toDto(Location location) {
         LocationReadDTO locationReadDTO = new LocationReadDTO();
         locationReadDTO.setId(location.getId());
         locationReadDTO.setName(location.getName());
@@ -27,5 +29,10 @@ public class LocationReadMapper {
         locationReadDTO.setRejectionReason(location.getRejectionReason());
 
         return locationReadDTO;
+    }
+
+    @Override
+    public Location toEntity(LocationReadDTO dto) {
+        throw new UnsupportedOperationException("Not implemented in ReadMapper");
     }
 }

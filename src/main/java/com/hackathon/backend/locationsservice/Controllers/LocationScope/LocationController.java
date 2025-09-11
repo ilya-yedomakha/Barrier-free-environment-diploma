@@ -1,8 +1,8 @@
 package com.hackathon.backend.locationsservice.Controllers.LocationScope;
 
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Create.LocationCreateDTO;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create.LocationCreateMapper;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationReadMapper;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create.LocationScope.LocationCreateMapper;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationScope.LocationReadMapper;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
@@ -59,7 +59,7 @@ public class LocationController {
         Long countLocations = locationService.getLocationsCount();
 
         List<Location> locations = locationService.dynamicSearch(filters);
-        List<LocationReadDTO> locationReadDTOS = locations.stream().map(locationReadMapper::mapReadLocation).toList();
+        List<LocationReadDTO> locationReadDTOS = locations.stream().map(locationReadMapper::toDto).toList();
         Pagination pagination;
         if (limit == null) {
             limit = 20;
@@ -77,7 +77,7 @@ public class LocationController {
     public ResponseEntity<?> getLocationById(@PathVariable(name = "location_id") UUID locationId) {
         Optional<Location> location = locationService.getById(locationId);
         if (location.isPresent()) {
-            return ResponseEntity.ok(locationReadMapper.mapReadLocation(location.get()));
+            return ResponseEntity.ok(locationReadMapper.toDto(location.get()));
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Location with ID " + locationId + " was not found.");
@@ -86,9 +86,9 @@ public class LocationController {
 
     @PostMapping
     ResponseEntity<?> save(@RequestBody LocationCreateDTO locationCreateDTO) {
-        Location location = locationCreateMapper.mapCreateLocation(locationCreateDTO);
+        Location location = locationCreateMapper.toEntity(locationCreateDTO);
         Location newLocation = locationService.add(location);
-        LocationReadDTO locationReadDTO = locationReadMapper.mapReadLocation(newLocation);
+        LocationReadDTO locationReadDTO = locationReadMapper.toDto(newLocation);
         return ResponseEntity.ok(locationReadDTO);
     }
 

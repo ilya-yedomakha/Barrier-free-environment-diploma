@@ -10,7 +10,8 @@ import java.util.UUID;
 @Repository
 public interface BarrierlessCriteriaTypeRepository extends JpaRepository<BarrierlessCriteriaType, UUID> {
 
-    List<BarrierlessCriteriaType> findBarrierlessCriteriaTypeByGroup_Id(UUID groupId);
+    List<BarrierlessCriteriaType> findByBarrierlessCriteriaGroup_Id(UUID id);
+
 
 
 

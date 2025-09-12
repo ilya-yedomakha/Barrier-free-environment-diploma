@@ -60,21 +60,11 @@ public class LocationController {
         filters.put("page", page);
         filters.put("limit", limit);
 
-        Long countLocations = locationService.getLocationsCount();
 
-        List<Location> locations = locationService.dynamicSearch(filters);
-        List<LocationReadDTO> locationReadDTOS = locations.stream().map(locationReadMapper::toDto).toList();
-        Pagination pagination;
-        if (limit == null) {
-            limit = 20;
-        }
-        if (page == null){
-            page = 1;
-        }
-        pagination = new Pagination(page, limit, countLocations, countLocations / limit);
 
-        LocationListViewDTO locationListViewDTOS = new LocationListViewDTO(locationReadDTOS, pagination);
-        return ResponseEntity.ok(locationListViewDTOS);
+        Result<Location,LocationListViewDTO> result = locationService.getAll(filters);
+
+        return ResponseEntity.ok(result.getEntityDTO());
     }
 
     @GetMapping("/{location_id}/")

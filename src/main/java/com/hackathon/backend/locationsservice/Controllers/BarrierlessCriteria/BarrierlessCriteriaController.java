@@ -21,6 +21,15 @@ public class BarrierlessCriteriaController {
 
     private final BarrierlessCriteriaService barrierlessCriteriaService;
 
+    @GetMapping("/")
+    public ResponseEntity<?> getAllBarrierlessCriterias() {
+        Result<BarrierlessCriteria, BarrierlessCriteriaReadDTO> Result = barrierlessCriteriaService.getAll();
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
 
     @GetMapping("/{barrierless_criteria_id}/")
     public ResponseEntity<?> getBarrierlessCriteriaById(@PathVariable(name = "barrierless_criteria_id") UUID barrierlessCriteriaId) {

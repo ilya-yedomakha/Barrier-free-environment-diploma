@@ -2,9 +2,12 @@ package com.hackathon.backend.locationsservice.Services.LocationScope;
 
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationScope.LocationReadMapper;
 import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
 import com.hackathon.backend.locationsservice.Domain.Verification;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
+import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -20,14 +23,15 @@ import java.util.*;
 @Service
 public class LocationService extends GeneralService<LocationReadMapper, LocationReadDTO, Location, LocationRepository> {
 
-    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper){
-        super(locationRepository,Location.class,locationReadMapper);
+    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper) {
+        super(locationRepository, Location.class, locationReadMapper);
     }
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    public List<Location> dynamicSearch(Map<String, Object> params) {
+
+    public Result<Location, LocationListViewDTO> getAll(Map<String, Object> params) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Location> cq = cb.createQuery(Location.class);
@@ -106,24 +110,39 @@ public class LocationService extends GeneralService<LocationReadMapper, Location
 
         TypedQuery<Location> query = entityManager.createQuery(cq);
 
+        Long countLocations = getLocationsCount();
+
         int limit = 20;
         int page = 1;
 
-        if (params.get("limit") != null && params.get("page") != null) {
-            limit = params.containsKey("limit") ? ((Number) params.get("limit")).intValue() : 20;
-            page = params.containsKey("page") ? ((Number) params.get("page")).intValue() : 1;
-
+        if (params.get("limit") != null) {
+            int paramLimit = ((Number) params.get("limit")).intValue();
+            limit = paramLimit > 0 ? paramLimit : 20;
         }
+
+        if (params.get("page") != null) {
+            int paramPage = ((Number) params.get("page")).intValue();
+            page = paramPage > 0 ? paramPage : 1;
+        }
+
 
         int firstResult = (page - 1) * limit;
 
         query.setFirstResult(firstResult);
         query.setMaxResults(limit);
 
-        return query.getResultList();
+
+        Pagination pagination;
+        pagination = new Pagination(page, limit, countLocations, countLocations / limit);
+
+        List<Location> entities = query.getResultList();
+        Result<Location, LocationListViewDTO> res = Result.success();
+        res.setEntities(query.getResultList());
+        res.entityDTO = new LocationListViewDTO(entities.stream().map(mapper::toDto).toList(), pagination);
+        return res;
     }
 
-
+    @Override
     public Location add(Location location) {
 
         return repository.save(location);

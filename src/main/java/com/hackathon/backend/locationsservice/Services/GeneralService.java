@@ -13,14 +13,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO extends BaseReadDTO, T extends BaseEntity,U extends JpaRepository<T,UUID>> implements IGeneralService<T> {
+public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO extends BaseReadDTO, T extends BaseEntity,U extends JpaRepository<T,UUID>> implements IGeneralService<T,TDTO> {
 
     protected final U repository;
     protected final Class<T> type;
     protected final Tmapper mapper;
 
     @Override
-    public T save(T entity) {
+    public T add(T entity) {
         return repository.save(entity);
     }
 
@@ -34,6 +34,7 @@ public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO ex
         repository.deleteById(entityId);
     }
 
+    @Override
     public Result<T, TDTO> getById(UUID entityId) {
         Optional<T> entity = repository.findById(entityId);
         if (entity.isPresent()){
@@ -43,13 +44,13 @@ public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO ex
             return res;
         } else return Result.failure(EntityError.notFound(type,entityId));
     }
-    @Override
-    public Optional<T> findById(UUID id) {
-        return repository.findById(id);
-    }
 
     @Override
-    public List<T> getAll() {
-        return repository.findAll();
+    public Result<T, TDTO> getAll() {
+        List<T> entities = repository.findAll();
+        Result<T, TDTO> res = Result.success();
+        res.setEntities(entities);
+        res.entityDTOs = entities.stream().map(mapper::toDto).toList();
+        return res;
     }
 }

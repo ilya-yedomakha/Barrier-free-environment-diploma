@@ -1,7 +1,7 @@
 package com.hackathon.backend.locationsservice.Services;
 
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Base.BaseMapper;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.Base.BaseReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.BaseMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.Base.BaseReadDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.Result;

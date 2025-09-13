@@ -1,12 +1,16 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationScope.LocationReadMapper;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationCreateMapper;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationReadMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
 import com.hackathon.backend.locationsservice.Domain.Verification;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
+import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
+import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
 import jakarta.persistence.EntityManager;
@@ -23,8 +27,11 @@ import java.util.*;
 @Service
 public class LocationService extends GeneralService<LocationReadMapper, LocationReadDTO, Location, LocationRepository> {
 
-    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper) {
+    private final LocationCreateMapper locationCreateMapper;
+
+    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper, LocationCreateMapper locationCreateMapper) {
         super(locationRepository, Location.class, locationReadMapper);
+        this.locationCreateMapper = locationCreateMapper;
     }
 
     @PersistenceContext
@@ -142,10 +149,44 @@ public class LocationService extends GeneralService<LocationReadMapper, Location
         return res;
     }
 
-    @Override
-    public Location add(Location location) {
 
-        return repository.save(location);
+    public Result<Location, LocationReadDTO> add(LocationCreateDTO locationCreateDTO) {
+        Location newLocation = locationCreateMapper.toEntity(locationCreateDTO);
+        if (newLocation == null) {
+            return Result.failure(EntityError.nullReference(type));
+        }
+
+        List<Location> locationNameDuplicates = repository.findAllByName(newLocation.getName());
+        if (locationNameDuplicates != null && !locationNameDuplicates.isEmpty()) {
+            return Result.failure(EntityError.sameName(type, newLocation.getName()));
+        }
+
+        //TODO: There can be same descriptions for different locations?
+//        List<Location> locationDescriptionDuplicates = repository.findAllByDescription(newLocation.getDescription());
+//        if (locations != null && !locations.isEmpty()) {
+//            return Result.failure(EntityError.sameDesc(type, newLocation.getDescription()));
+//        }
+
+        List<Location> locations = repository.findAll();
+        for (Location location : locations) {
+            if (location.getCoordinates().equals(newLocation.getCoordinates())) {
+                return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));
+            }
+        }
+
+        //TODO: There can be same addresses for different locations?
+//        List<Location> locationAddressDuplicates = repository.findAllByDescription(newLocation.getDescription());
+//        if (locations != null && !locations.isEmpty()) {
+//            return Result.failure(EntityError.sameName(type, newLocation.getDescription()));
+//        }
+
+        Location savedLocation = repository.save(newLocation);
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = savedLocation;
+        res.entityDTO = mapper.toDto(savedLocation);
+
+        return res;
+
     }
 
     public Long getLocationsCount() {

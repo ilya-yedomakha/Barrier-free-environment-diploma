@@ -1,13 +1,12 @@
 package com.hackathon.backend.locationsservice.Controllers.LocationScope;
 
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Create.LocationCreateDTO;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Create.LocationScope.LocationCreateMapper;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Mappers.Read.LocationScope.LocationReadMapper;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.ViewLists.LocationListViewDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationCreateMapper;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationReadMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
-import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import jakarta.validation.constraints.Max;
@@ -18,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -78,11 +76,13 @@ public class LocationController {
     }
 
     @PostMapping
-    ResponseEntity<?> save(@RequestBody LocationCreateDTO locationCreateDTO) {
-        Location location = locationCreateMapper.toEntity(locationCreateDTO);
-        Location newLocation = locationService.add(location);
-        LocationReadDTO locationReadDTO = locationReadMapper.toDto(newLocation);
-        return ResponseEntity.ok(locationReadDTO);
+    ResponseEntity<?> add(@RequestBody LocationCreateDTO locationCreateDTO) {
+        Result<Location, LocationReadDTO> Result = locationService.add(locationCreateDTO);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
     }
 
     @GetMapping("/test")

@@ -1,20 +1,12 @@
 package com.hackathon.backend.locationsservice.Controllers;
 
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.Read.LocationScope.LocationReadDTO;
-import com.hackathon.backend.locationsservice.Controllers.RequestDTO.VerificationDTO;
-import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
-import com.hackathon.backend.locationsservice.Domain.Verification;
-import com.hackathon.backend.locationsservice.Result.Result;
+import com.hackathon.backend.locationsservice.DTOs.VerificationDTO;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import com.hackathon.backend.locationsservice.Services.VerificationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 

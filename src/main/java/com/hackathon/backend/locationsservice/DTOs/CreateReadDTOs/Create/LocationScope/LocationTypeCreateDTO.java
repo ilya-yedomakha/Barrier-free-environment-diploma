@@ -28,8 +28,8 @@ public class LocationTypeCreateDTO extends BaseRegularCreateDTO {
     private UUID createdBy;
 
     @NotNull
-    private LocalDateTime createdAt;
+    public LocalDateTime createdAt = LocalDateTime.now();
 
     @NotNull
-    private LocalDateTime updatedAt;
+    public LocalDateTime updatedAt = LocalDateTime.now();
 }

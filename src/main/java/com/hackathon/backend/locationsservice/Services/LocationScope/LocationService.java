@@ -5,10 +5,13 @@ import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.
 import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationReadMapper;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
 import com.hackathon.backend.locationsservice.Domain.Verification;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
@@ -28,10 +31,12 @@ import java.util.*;
 public class LocationService extends GeneralService<LocationReadMapper, LocationReadDTO, Location, LocationRepository> {
 
     private final LocationCreateMapper locationCreateMapper;
+    private final LocationTypeRepository locationTypeRepository;
 
-    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper, LocationCreateMapper locationCreateMapper) {
+    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper, LocationCreateMapper locationCreateMapper, LocationTypeRepository locationTypeRepository) {
         super(locationRepository, Location.class, locationReadMapper);
         this.locationCreateMapper = locationCreateMapper;
+        this.locationTypeRepository = locationTypeRepository;
     }
 
     @PersistenceContext
@@ -151,6 +156,10 @@ public class LocationService extends GeneralService<LocationReadMapper, Location
 
 
     public Result<Location, LocationReadDTO> add(LocationCreateDTO locationCreateDTO) {
+        Optional<LocationType> locationType = locationTypeRepository.findById(locationCreateDTO.getType());
+        if (locationType.isEmpty()) {
+            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class,locationCreateDTO.getType()));
+        }
         Location newLocation = locationCreateMapper.toEntity(locationCreateDTO);
         if (newLocation == null) {
             return Result.failure(EntityError.nullReference(type));

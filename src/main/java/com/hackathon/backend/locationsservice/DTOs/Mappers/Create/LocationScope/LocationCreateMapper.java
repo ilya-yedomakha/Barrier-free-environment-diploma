@@ -33,11 +33,7 @@ public class LocationCreateMapper implements BaseCreateMapper<Location, Location
         location.setName(dto.name);
         location.setAddress(dto.address);
         location.setCoordinates(coordinates);
-        LocationType locationType = locationTypeRepository
-                .findById(dto.type)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "LocationType with id " + dto.type + " not found while trying to convert DTO into LocationType"
-                ));
+        LocationType locationType = locationTypeRepository.findById(dto.type).get();
         location.setType(locationType);
         location.setDescription(dto.description);
         location.setContacts(dto.contacts);

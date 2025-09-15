@@ -19,10 +19,7 @@ public class LocationTypeCreateMapper implements BaseCreateMapper<LocationType, 
         locationType.setDescription(dto.getDescription());
         locationType.setCreatedBy(dto.getCreatedBy());
         BarrierlessCriteriaGroup group = barrierlessCriteriaGroupRepository
-                .findById(dto.getBarrierlessCriteriaGroupId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "BarrierlessCriteriaGroup with id " + dto.getBarrierlessCriteriaGroupId() + " not found while trying to convert DTO into LocationType"
-                ));
+                .findById(dto.getBarrierlessCriteriaGroupId()).get();
         locationType.setBarrierlessCriteriaGroup(group);
         locationType.setCreatedAt(dto.getCreatedAt());
         locationType.setUpdatedAt(dto.getUpdatedAt());

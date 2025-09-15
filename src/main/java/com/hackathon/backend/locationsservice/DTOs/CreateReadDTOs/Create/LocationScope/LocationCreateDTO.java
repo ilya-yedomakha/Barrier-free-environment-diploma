@@ -7,10 +7,14 @@ import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Getter
+@Setter
 public class LocationCreateDTO extends BaseRegularCreateDTO {
     @NotNull
     @NotBlank

@@ -15,17 +15,17 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BarrierlessCriteriaReadDTO extends BaseRegularReadDTO {
-    private String name;
+    public String name;
 
-    private String description;
+    public String description;
 
-    private UUID barrierlessCriteriaType;
+    public UUID barrierlessCriteriaTypeId;
 
-    private UUID createdBy;
+    public UUID createdBy;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    public LocalDateTime createdAt;
 
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    public LocalDateTime updatedAt;
 
-    private BarrierlessCriteriaRank barrierlessCriteriaRank;
+    public BarrierlessCriteriaRank barrierlessCriteriaRank;
 }

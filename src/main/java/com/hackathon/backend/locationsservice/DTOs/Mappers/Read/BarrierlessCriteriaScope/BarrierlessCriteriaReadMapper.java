@@ -17,7 +17,7 @@ public class BarrierlessCriteriaReadMapper implements BaseReadMapper<Barrierless
         dto.setCreatedBy(entity.getCreatedBy());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setBarrierlessCriteriaType(entity.getBarrierlessCriteriaType().getId());
+        dto.setBarrierlessCriteriaTypeId(entity.getBarrierlessCriteriaType().getId());
         dto.setBarrierlessCriteriaRank(entity.getBarrierlessCriteriaRank());
         return dto;
     }

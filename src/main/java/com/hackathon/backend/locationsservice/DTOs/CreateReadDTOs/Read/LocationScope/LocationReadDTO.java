@@ -43,9 +43,9 @@ public class LocationReadDTO extends BaseRegularReadDTO {
 
     public Integer overallAccessibilityScore;
 
-    public LocalDateTime createdAt = LocalDateTime.now();
+    public LocalDateTime createdAt;
 
-    public LocalDateTime updatedAt = LocalDateTime.now();
+    public LocalDateTime updatedAt;
 
     public LocalDateTime lastVerifiedAt;
 

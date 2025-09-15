@@ -1,6 +1,6 @@
-package com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.BarrierlessCriteriaScope;
+package com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.BarrierlessCriteriaScope;
 
-import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.Base.BaseRegularReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Base.BaseRegularCreateDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import jakarta.persistence.Column;
@@ -21,16 +21,20 @@ import java.util.UUID;
 @Setter
 //@AllArgsConstructor
 @NoArgsConstructor
-public class BarrierlessCriteriaTypeReadDTO extends BaseRegularReadDTO {
+public class BarrierlessCriteriaTypeCreateDTO extends BaseRegularCreateDTO {
     public String name;
 
+    @NotBlank
     public String description;
 
     public UUID barrierlessCriteriaGroupId;
 
+    @NotNull
     public UUID createdBy;
 
+    @NotNull
     public LocalDateTime createdAt = LocalDateTime.now();
 
+    @NotNull
     public LocalDateTime updatedAt = LocalDateTime.now();
 }

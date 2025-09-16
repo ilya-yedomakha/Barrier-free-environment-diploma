@@ -1,6 +1,5 @@
 package com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope.interfaces;
 
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 
 import java.util.List;

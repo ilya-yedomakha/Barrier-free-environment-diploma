@@ -5,6 +5,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationS
 import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationTypeCreateMapper;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationTypeReadMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaGroupRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
@@ -37,10 +38,10 @@ public class LocationTypeService extends GeneralService<LocationTypeReadMapper, 
             return Result.failure(EntityError.nullReference(type));
         }
 
-        List<LocationType> locationTypeNameDuplicates = repository.findAllByName(newLocationType.getName());
-        if (locationTypeNameDuplicates != null && !locationTypeNameDuplicates.isEmpty()) {
+        List<LocationType> locationTypes = repository.findAll();
+        if(checkNameDuplicates(locationTypes,newLocationType.getName())){
             return Result.failure(EntityError.sameName(type, newLocationType.getName()));
-        }
+        };
 
         //TODO: There can be same descriptions for different locations?
 //        List<LocationType> locationTypeDescriptionDuplicates = repository.findAllByDescription(newLocationType.getDescription());

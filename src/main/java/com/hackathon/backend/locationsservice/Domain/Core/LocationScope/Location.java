@@ -1,6 +1,7 @@
 package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
-import com.hackathon.backend.locationsservice.Domain.Core.Base.RegularEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.NamedEntity;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
@@ -24,12 +25,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Location extends RegularEntity {
-
-    @NotNull
-    @NotBlank
-    @Column(length = 255, nullable = false)
-    private String name;
+public class Location extends NamedEntity {
 
     @NotNull
     @NotBlank

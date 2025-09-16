@@ -1,7 +1,6 @@
 package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope;
 
-import com.hackathon.backend.locationsservice.Domain.Core.Base.RegularEntity;
-import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.NamedEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,12 +19,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BarrierlessCriteriaType extends RegularEntity {
-
-    @NotNull
-    @NotBlank
-    @Column(length = 255, nullable = false)
-    private String name;
+public class BarrierlessCriteriaType extends NamedEntity {
 
     @NotBlank
     @Column(columnDefinition = "TEXT")

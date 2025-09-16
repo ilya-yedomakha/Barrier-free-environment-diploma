@@ -164,11 +164,10 @@ public class LocationService extends GeneralService<LocationReadMapper, Location
         if (newLocation == null) {
             return Result.failure(EntityError.nullReference(type));
         }
-
-        List<Location> locationNameDuplicates = repository.findAllByName(newLocation.getName());
-        if (locationNameDuplicates != null && !locationNameDuplicates.isEmpty()) {
+        List<Location> locations = repository.findAll();
+        if(checkNameDuplicates(locations,newLocation.getName())){
             return Result.failure(EntityError.sameName(type, newLocation.getName()));
-        }
+        };
 
         //TODO: There can be same descriptions for different locations?
 //        List<Location> locationDescriptionDuplicates = repository.findAllByDescription(newLocation.getDescription());
@@ -176,7 +175,7 @@ public class LocationService extends GeneralService<LocationReadMapper, Location
 //            return Result.failure(EntityError.sameDesc(type, newLocation.getDescription()));
 //        }
 
-        List<Location> locations = repository.findAll();
+        //TODO: Maybe in some radius
         for (Location location : locations) {
             if (location.getCoordinates().equals(newLocation.getCoordinates())) {
                 return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));

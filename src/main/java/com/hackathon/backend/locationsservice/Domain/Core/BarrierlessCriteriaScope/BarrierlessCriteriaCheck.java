@@ -1,12 +1,11 @@
 package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope;
 
-import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.User;
 import jakarta.persistence.*;
 
 @Entity
-public class BarrierlessCriteriaCheck extends BaseEntity {
+public class BarrierlessCriteriaCheck {
 
     @EmbeddedId
     private BarrierlessCriteriaCheckEmbeddedId barrierlessCriteriaCheckId;

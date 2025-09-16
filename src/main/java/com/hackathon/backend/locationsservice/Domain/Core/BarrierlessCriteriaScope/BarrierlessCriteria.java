@@ -1,7 +1,7 @@
 package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope;
 
 
-import com.hackathon.backend.locationsservice.Domain.Core.Base.RegularEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
 import com.hackathon.backend.locationsservice.Domain.Enums.BarrierlessCriteriaRank;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BarrierlessCriteria extends RegularEntity {
+public class BarrierlessCriteria extends BaseEntity {
 
     private String name;
 

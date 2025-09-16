@@ -1,8 +1,8 @@
 package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
-import com.hackathon.backend.locationsservice.Domain.Core.Base.RegularEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.NamedEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,12 +21,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LocationType extends RegularEntity {
-
-    @NotNull
-    @NotBlank
-    @Column(length = 255, nullable = false)
-    private String name;
+public class LocationType extends NamedEntity {
 
     @NotBlank
     @Column(columnDefinition = "TEXT")

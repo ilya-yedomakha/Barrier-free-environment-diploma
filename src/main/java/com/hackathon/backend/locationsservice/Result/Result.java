@@ -1,7 +1,6 @@
 package com.hackathon.backend.locationsservice.Result;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.Base.BaseReadDTO;
-import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class Result<TEntity extends BaseEntity,TDTO extends BaseReadDTO> {
+public class Result<TEntity,TDTO extends BaseReadDTO> {
 
     public final boolean isSuccess;
     public final Error error;
@@ -29,11 +28,11 @@ public class Result<TEntity extends BaseEntity,TDTO extends BaseReadDTO> {
         this.error = error;
     }
 
-    public static <TEntity extends BaseEntity, TDTO extends BaseReadDTO> Result<TEntity, TDTO> success() {
+    public static <TEntity, TDTO extends BaseReadDTO> Result<TEntity, TDTO> success() {
         return new Result<>(true, Error.NONE);
     }
 
-    public static <TModel extends BaseEntity, TDTO extends BaseReadDTO> Result<TModel, TDTO> failure(Error error) {
+    public static <TModel, TDTO extends BaseReadDTO> Result<TModel, TDTO> failure(Error error) {
         return new Result<>(false, error);
     }
 }

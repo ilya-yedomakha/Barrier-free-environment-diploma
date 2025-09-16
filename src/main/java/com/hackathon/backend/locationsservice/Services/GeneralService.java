@@ -3,6 +3,7 @@ package com.hackathon.backend.locationsservice.Services;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.BaseMapper;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.Base.BaseReadDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.Base.NamedEntity;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import lombok.RequiredArgsConstructor;
@@ -52,5 +53,13 @@ public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO ex
         res.setEntities(entities);
         res.entityDTOs = entities.stream().map(mapper::toDto).toList();
         return res;
+    }
+
+    protected boolean checkNameDuplicates(List<? extends NamedEntity> entities, String name) {
+        String normalizedName = name.toLowerCase().replace(" ", "");
+
+        return entities.stream()
+                .map(e -> e.getName().toLowerCase().replace(" ", ""))
+                .anyMatch(n -> n.equals(normalizedName));
     }
 }

@@ -32,7 +32,7 @@ public class BarrierlessCriteriaTypeController {
     }
 
     @GetMapping("/{barrierless_criteria_type_id}/")
-    public ResponseEntity<?> getBarrierlessCriteriaTypeById(@PathVariable(name = "barrierless_criteria_group_id") UUID barrierlessCriteriaTypeId) {
+    public ResponseEntity<?> getBarrierlessCriteriaTypeById(@PathVariable(name = "barrierless_criteria_type_id") UUID barrierlessCriteriaTypeId) {
         Result<BarrierlessCriteriaType, BarrierlessCriteriaTypeReadDTO> Result = barrierlessCriteriaTypeService.getById(barrierlessCriteriaTypeId);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());

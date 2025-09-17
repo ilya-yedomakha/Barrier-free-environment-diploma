@@ -43,6 +43,7 @@ public class Photo extends BaseEntity {
     private UUID createdBy;
 
     @Column(name = "moderation_status", nullable = false)
+    @Enumerated(value = EnumType.STRING)
     private ModerationStatusEnum moderationStatusEnum;
 
     @Min(0)

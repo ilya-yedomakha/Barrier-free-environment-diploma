@@ -30,8 +30,6 @@ public class LocationCreateDTO extends BaseRegularCreateDTO {
     @NotNull
     public UUID type;
 
-    public String category;
-
     public String description;
 
     public Contacts contacts;

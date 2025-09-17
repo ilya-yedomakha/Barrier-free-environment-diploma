@@ -42,6 +42,7 @@ public class BarrierlessCriteriaService extends GeneralService<BarrierlessCriter
 
         List<BarrierlessCriteria> barrierlessCriterias = repository.findAll();
 
+        //TODO
         String normalizedDescription = newBarrierlessCriteria.getDescription().toLowerCase().replace(" ", "");
 
         boolean duplicateDescriptions = barrierlessCriterias.stream()

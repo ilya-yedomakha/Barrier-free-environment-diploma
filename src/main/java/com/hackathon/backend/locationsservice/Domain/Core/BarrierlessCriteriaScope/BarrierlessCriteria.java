@@ -42,7 +42,7 @@ public class BarrierlessCriteria extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Enumerated
-    @NotNull
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "rank", nullable = false)
     private BarrierlessCriteriaRank barrierlessCriteriaRank;
 }

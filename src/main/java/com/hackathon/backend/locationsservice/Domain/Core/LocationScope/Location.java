@@ -61,7 +61,7 @@ public class Location extends NamedEntity {
     @Column(name = "organization_id")
     private UUID organizationId;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "status", nullable = false)
     private LocationStatusEnum status;
 

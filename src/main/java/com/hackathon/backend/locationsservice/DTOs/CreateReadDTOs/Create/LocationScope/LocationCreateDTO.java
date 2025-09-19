@@ -22,6 +22,10 @@ public class LocationCreateDTO extends BaseRegularCreateDTO {
 
     @NotNull
     @NotBlank
+    public UUID correlationId;
+
+    @NotNull
+    @NotBlank
     public String address;
 
     @NotNull

@@ -4,6 +4,8 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationCreateMapper;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationReadMapper;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.IdReplacementRequest;
+import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.TypeOfImageReplacement;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
@@ -17,6 +19,7 @@ import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
@@ -32,11 +35,13 @@ public class LocationService extends GeneralService<LocationReadMapper, Location
 
     private final LocationCreateMapper locationCreateMapper;
     private final LocationTypeRepository locationTypeRepository;
+    private final LocationEventPub locationEventPub;
 
-    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper, LocationCreateMapper locationCreateMapper, LocationTypeRepository locationTypeRepository) {
+    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper, LocationCreateMapper locationCreateMapper, LocationTypeRepository locationTypeRepository, LocationEventPub locationEventPub) {
         super(locationRepository, Location.class, locationReadMapper);
         this.locationCreateMapper = locationCreateMapper;
         this.locationTypeRepository = locationTypeRepository;
+        this.locationEventPub = locationEventPub;
     }
 
     @PersistenceContext
@@ -189,6 +194,13 @@ public class LocationService extends GeneralService<LocationReadMapper, Location
 //        }
 
         Location savedLocation = repository.save(newLocation);
+
+        IdReplacementRequest replacementRequest = IdReplacementRequest.builder()
+                .newId(savedLocation.getId())
+                .correlationId(locationCreateDTO.correlationId)
+                .typeOfImageReplacement(TypeOfImageReplacement.LocationImage).build();
+        locationEventPub.locationCreated(replacementRequest);
+
         Result<Location, LocationReadDTO> res = Result.success();
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);

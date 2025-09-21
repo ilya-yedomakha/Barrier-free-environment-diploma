@@ -11,6 +11,8 @@ import com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope.
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -43,6 +45,7 @@ public class BarrierlessCriteriaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> createBarrierlessCriteria(@RequestBody BarrierlessCriteriaCreateDTO check) {
 
         Result<BarrierlessCriteria, BarrierlessCriteriaReadDTO> Result = barrierlessCriteriaService.add(check);

@@ -1,6 +1,5 @@
 package com.hackathon.backend.locationsservice.Controllers.BarrierlessCriteria;
 
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope.BarrierlessCriteriaCheckService;
 import com.hackathon.backend.locationsservice.exceptions.NotFoundEntity;

@@ -11,6 +11,8 @@ import com.hackathon.backend.locationsservice.Services.LocationScope.LocationTyp
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/location-types")
 @RequiredArgsConstructor
+
 public class LocationTypeController {
 
     private final LocationTypeService locationTypeService;
@@ -43,6 +46,7 @@ public class LocationTypeController {
     }
 
     @PostMapping("/")
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> add(@RequestBody LocationTypeCreateDTO locationTypeCreateDTO) {
         Result<LocationType, LocationTypeReadDTO> Result = locationTypeService.add(locationTypeCreateDTO);
         if (Result.isSuccess()) {

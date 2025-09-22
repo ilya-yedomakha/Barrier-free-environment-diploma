@@ -2,10 +2,8 @@ package com.hackathon.backend.locationsservice.Services.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationTypeCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationTypeCreateMapper;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationTypeReadMapper;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationTypeMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
-import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaGroupRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
@@ -18,13 +16,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class LocationTypeService extends GeneralService<LocationTypeReadMapper, LocationTypeReadDTO, LocationType, LocationTypeRepository> {
-    private final LocationTypeCreateMapper locationTypeCreateMapper;
+public class LocationTypeService extends GeneralService<LocationTypeMapper, LocationTypeReadDTO, LocationTypeCreateDTO, LocationType, LocationTypeRepository> {
     private final BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository;
 
-    LocationTypeService(LocationTypeRepository locationTypeRepository, LocationTypeReadMapper locationTypeReadMapper, LocationTypeCreateMapper locationTypeCreateMapper, BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository) {
-        super(locationTypeRepository, LocationType.class, locationTypeReadMapper);
-        this.locationTypeCreateMapper = locationTypeCreateMapper;
+    LocationTypeService(LocationTypeRepository locationTypeRepository, LocationTypeMapper locationTypeMapper, BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository) {
+        super(locationTypeRepository, LocationType.class, locationTypeMapper);
         this.barrierlessCriteriaGroupRepository = barrierlessCriteriaGroupRepository;
     }
 
@@ -33,7 +29,7 @@ public class LocationTypeService extends GeneralService<LocationTypeReadMapper, 
         if (barrierlessCriteriaGroup.isEmpty()) {
             return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class,locationTypeCreateDTO.getBarrierlessCriteriaGroupId()));
         }
-        LocationType newLocationType = locationTypeCreateMapper.toEntity(locationTypeCreateDTO);
+        LocationType newLocationType = mapper.toEntity(locationTypeCreateDTO);
         if (newLocationType == null) {
             return Result.failure(EntityError.nullReference(type));
         }

@@ -1,7 +1,8 @@
-package com.hackathon.backend.locationsservice.DTOs.Mappers.Create.BarrierlessCriteriaScope;
+package com.hackathon.backend.locationsservice.DTOs.Mappers.BarrierlessCriteriaScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.BarrierlessCriteriaScope.BarrierlessCriteriaTypeCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.Create.BaseCreateMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.BarrierlessCriteriaScope.BarrierlessCriteriaTypeReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.BaseMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaGroupRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class BarrierlessCriteriaTypeCreateMapper implements BaseCreateMapper<BarrierlessCriteriaType, BarrierlessCriteriaTypeCreateDTO> {
+public class BarrierlessCriteriaTypeMapper implements BaseMapper<BarrierlessCriteriaType, BarrierlessCriteriaTypeReadDTO, BarrierlessCriteriaTypeCreateDTO> {
 
     private final BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository;
 
@@ -29,7 +30,16 @@ public class BarrierlessCriteriaTypeCreateMapper implements BaseCreateMapper<Bar
     }
 
     @Override
-    public BarrierlessCriteriaTypeCreateDTO toDto(BarrierlessCriteriaType entity) {
-        throw new UnsupportedOperationException("Not implemented in CreateMapper");
+    public BarrierlessCriteriaTypeReadDTO toDto(BarrierlessCriteriaType entity) {
+        BarrierlessCriteriaTypeReadDTO dto = new BarrierlessCriteriaTypeReadDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setCreatedBy(entity.getCreatedBy());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setBarrierlessCriteriaGroupId(entity.getBarrierlessCriteriaGroup().getId());
+
+        return dto;
     }
 }

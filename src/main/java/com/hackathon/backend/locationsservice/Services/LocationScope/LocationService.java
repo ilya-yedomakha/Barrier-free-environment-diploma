@@ -1,9 +1,8 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationCreateMapper;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationReadMapper;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
@@ -28,14 +27,12 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-public class LocationService extends GeneralService<LocationReadMapper, LocationReadDTO, Location, LocationRepository> {
+public class LocationService extends GeneralService<LocationMapper, LocationReadDTO, LocationCreateDTO, Location, LocationRepository> {
 
-    private final LocationCreateMapper locationCreateMapper;
     private final LocationTypeRepository locationTypeRepository;
 
-    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper, LocationCreateMapper locationCreateMapper, LocationTypeRepository locationTypeRepository) {
-        super(locationRepository, Location.class, locationReadMapper);
-        this.locationCreateMapper = locationCreateMapper;
+    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository) {
+        super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
     }
 
@@ -160,7 +157,7 @@ public class LocationService extends GeneralService<LocationReadMapper, Location
         if (locationType.isEmpty()) {
             return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class,locationCreateDTO.getType()));
         }
-        Location newLocation = locationCreateMapper.toEntity(locationCreateDTO);
+        Location newLocation = mapper.toEntity(locationCreateDTO);
         if (newLocation == null) {
             return Result.failure(EntityError.nullReference(type));
         }

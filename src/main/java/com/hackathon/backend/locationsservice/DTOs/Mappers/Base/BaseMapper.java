@@ -1,6 +1,6 @@
 package com.hackathon.backend.locationsservice.DTOs.Mappers.Base;
 
-public interface BaseMapper<E, D> {
-    D toDto(E entity);
-    E toEntity(D dto);
+public interface BaseMapper<E, readD, createD> {
+    readD toDto(E entity);
+    E toEntity(createD dto);
 }

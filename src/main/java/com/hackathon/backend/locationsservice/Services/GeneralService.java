@@ -1,5 +1,6 @@
 package com.hackathon.backend.locationsservice.Services;
 
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Base.BaseCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.BaseMapper;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.Base.BaseReadDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
@@ -14,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO extends BaseReadDTO, T extends BaseEntity,U extends JpaRepository<T,UUID>> implements IGeneralService<T,TDTO> {
+public abstract class GeneralService<Tmapper extends BaseMapper<T,RDTO,CDTO>, RDTO extends BaseReadDTO, CDTO extends BaseCreateDTO, T extends BaseEntity,U extends JpaRepository<T,UUID>> implements IGeneralService<T,RDTO> {
 
     protected final U repository;
     protected final Class<T> type;
@@ -36,10 +37,10 @@ public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO ex
     }
 
     @Override
-    public Result<T, TDTO> getById(UUID entityId) {
+    public Result<T, RDTO> getById(UUID entityId) {
         Optional<T> entity = repository.findById(entityId);
         if (entity.isPresent()){
-            Result<T, TDTO> res = Result.success();
+            Result<T, RDTO> res = Result.success();
             res.setEntity(entity.get());
             res.setEntityDTO(mapper.toDto(entity.get()));
             return res;
@@ -47,9 +48,9 @@ public abstract class GeneralService<Tmapper extends BaseMapper<T,TDTO>, TDTO ex
     }
 
     @Override
-    public Result<T, TDTO> getAll() {
+    public Result<T, RDTO> getAll() {
         List<T> entities = repository.findAll();
-        Result<T, TDTO> res = Result.success();
+        Result<T, RDTO> res = Result.success();
         res.setEntities(entities);
         res.entityDTOs = entities.stream().map(mapper::toDto).toList();
         return res;

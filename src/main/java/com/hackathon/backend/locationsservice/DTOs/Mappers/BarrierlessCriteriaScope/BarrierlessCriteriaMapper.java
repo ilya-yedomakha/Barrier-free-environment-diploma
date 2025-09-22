@@ -1,18 +1,16 @@
-package com.hackathon.backend.locationsservice.DTOs.Mappers.Create.BarrierlessCriteriaScope;
+package com.hackathon.backend.locationsservice.DTOs.Mappers.BarrierlessCriteriaScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.BarrierlessCriteriaScope.BarrierlessCriteriaCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.Create.BaseCreateMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.BarrierlessCriteriaScope.BarrierlessCriteriaReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.BaseMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
-import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
-import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaRepository;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class BarrierlessCriteriaCreateMapper implements BaseCreateMapper<BarrierlessCriteria, BarrierlessCriteriaCreateDTO> {
+public class BarrierlessCriteriaMapper implements BaseMapper<BarrierlessCriteria, BarrierlessCriteriaReadDTO,BarrierlessCriteriaCreateDTO> {
 
     private final BarrierlessCriteriaTypeRepository barrierlessCriteriaTypeRepository;
 
@@ -32,7 +30,16 @@ public class BarrierlessCriteriaCreateMapper implements BaseCreateMapper<Barrier
     }
 
     @Override
-    public BarrierlessCriteriaCreateDTO toDto(BarrierlessCriteria entity) {
-        throw new UnsupportedOperationException("Not implemented in CreateMapper");
+    public BarrierlessCriteriaReadDTO toDto(BarrierlessCriteria entity) {
+        BarrierlessCriteriaReadDTO dto = new BarrierlessCriteriaReadDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setCreatedBy(entity.getCreatedBy());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setBarrierlessCriteriaTypeId(entity.getBarrierlessCriteriaType().getId());
+        dto.setBarrierlessCriteriaRank(entity.getBarrierlessCriteriaRank());
+        return dto;
     }
 }

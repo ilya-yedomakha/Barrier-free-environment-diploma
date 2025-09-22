@@ -1,7 +1,8 @@
-package com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope;
+package com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationTypeCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.Create.BaseCreateMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.BaseMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaGroupRepository;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class LocationTypeCreateMapper implements BaseCreateMapper<LocationType, LocationTypeCreateDTO> {
+public class LocationTypeMapper implements BaseMapper<LocationType, LocationTypeReadDTO, LocationTypeCreateDTO> {
     private final BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository;
     @Override
     public LocationType toEntity(LocationTypeCreateDTO dto) {
@@ -27,7 +28,16 @@ public class LocationTypeCreateMapper implements BaseCreateMapper<LocationType, 
     }
 
     @Override
-    public LocationTypeCreateDTO toDto(LocationType entity) {
-        return null;
+    public LocationTypeReadDTO toDto(LocationType LocationType) {
+        LocationTypeReadDTO LocationTypeReadDTO = new LocationTypeReadDTO();
+        LocationTypeReadDTO.setId(LocationType.getId());
+        LocationTypeReadDTO.setName(LocationType.getName());
+        LocationTypeReadDTO.setDescription(LocationType.getDescription());
+        LocationTypeReadDTO.setBarrierlessCriteriaGroupId(LocationType.getBarrierlessCriteriaGroup().getId());
+        LocationTypeReadDTO.setCreatedAt(LocationType.getCreatedAt());
+        LocationTypeReadDTO.setCreatedBy(LocationType.getCreatedBy());
+        LocationTypeReadDTO.setUpdatedAt(LocationType.getUpdatedAt());
+
+        return LocationTypeReadDTO;
     }
 }

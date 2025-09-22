@@ -1,8 +1,6 @@
 package com.hackathon.backend.locationsservice.Controllers.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationCreateMapper;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationReadMapper;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
@@ -26,8 +24,6 @@ import java.util.UUID;
 public class LocationController {
 
     private final LocationService locationService;
-    private final LocationCreateMapper locationCreateMapper;
-    private final LocationReadMapper locationReadMapper;
 
     @GetMapping()
     public ResponseEntity<?> getLocations(

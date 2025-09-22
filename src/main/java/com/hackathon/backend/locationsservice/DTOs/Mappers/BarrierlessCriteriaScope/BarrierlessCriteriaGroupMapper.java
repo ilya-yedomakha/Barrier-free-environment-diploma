@@ -1,14 +1,15 @@
-package com.hackathon.backend.locationsservice.DTOs.Mappers.Create.BarrierlessCriteriaScope;
+package com.hackathon.backend.locationsservice.DTOs.Mappers.BarrierlessCriteriaScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.BarrierlessCriteriaScope.BarrierlessCriteriaGroupCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.Create.BaseCreateMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.BarrierlessCriteriaScope.BarrierlessCriteriaGroupReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.BaseMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class BarrierlessCriteriaGroupCreateMapper implements BaseCreateMapper<BarrierlessCriteriaGroup, BarrierlessCriteriaGroupCreateDTO> {
+public class BarrierlessCriteriaGroupMapper implements BaseMapper<BarrierlessCriteriaGroup, BarrierlessCriteriaGroupReadDTO, BarrierlessCriteriaGroupCreateDTO> {
 
 
     @Override
@@ -25,7 +26,15 @@ public class BarrierlessCriteriaGroupCreateMapper implements BaseCreateMapper<Ba
     }
 
     @Override
-    public BarrierlessCriteriaGroupCreateDTO toDto(BarrierlessCriteriaGroup entity) {
-        throw new UnsupportedOperationException("Not implemented in CreateMapper");
+    public BarrierlessCriteriaGroupReadDTO toDto(BarrierlessCriteriaGroup entity) {
+        BarrierlessCriteriaGroupReadDTO dto = new BarrierlessCriteriaGroupReadDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setCreatedBy(entity.getCreatedBy());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+
+        return dto;
     }
 }

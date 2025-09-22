@@ -1,11 +1,11 @@
-package com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope;
+package com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.Create.BaseCreateMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.Base.BaseMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
-
-
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class LocationCreateMapper implements BaseCreateMapper<Location, LocationCreateDTO> {
+public class LocationMapper implements BaseMapper<Location, LocationReadDTO, LocationCreateDTO> {
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
     private final LocationTypeRepository locationTypeRepository;
@@ -51,7 +51,25 @@ public class LocationCreateMapper implements BaseCreateMapper<Location, Location
     }
 
     @Override
-    public LocationCreateDTO toDto(Location entity) {
-        throw new UnsupportedOperationException("Not implemented in CreateMapper");
+    public LocationReadDTO toDto(Location location) {
+        LocationReadDTO locationReadDTO = new LocationReadDTO();
+        locationReadDTO.setId(location.getId());
+        locationReadDTO.setName(location.getName());
+        locationReadDTO.setAddress(location.getAddress());
+        locationReadDTO.setCoordinates(new Coordinates(location.getCoordinates().getX(), location.getCoordinates().getY()));
+        locationReadDTO.setType(location.getType().getId());
+        locationReadDTO.setDescription(location.getDescription());
+        locationReadDTO.setContacts(location.getContacts());
+        locationReadDTO.setWorkingHours(location.getWorkingHours());
+        locationReadDTO.setCreatedBy(location.getCreatedBy());
+        locationReadDTO.setOrganizationId(location.getOrganizationId());
+        locationReadDTO.setStatus(location.getStatus());
+        locationReadDTO.setOverallAccessibilityScore(location.getOverallAccessibilityScore());
+        locationReadDTO.setCreatedAt(location.getCreatedAt());
+        locationReadDTO.setUpdatedAt(location.getUpdatedAt());
+        locationReadDTO.setLastVerifiedAt(location.getLastVerifiedAt());
+        locationReadDTO.setRejectionReason(location.getRejectionReason());
+
+        return locationReadDTO;
     }
 }

@@ -3,6 +3,7 @@ package com.hackathon.backend.locationsservice.Security.Config;
 import com.hackathon.backend.locationsservice.Security.Filters.JwtFilter;
 import com.hackathon.backend.locationsservice.Security.Handlers.CustomAccessDeniedHandler;
 import com.hackathon.backend.locationsservice.Security.Handlers.CustomLogoutHandler;
+import com.hackathon.backend.locationsservice.Security.Handlers.Exceptions.JwtAuthEntryPoint;
 import com.hackathon.backend.locationsservice.Security.Services.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,17 +33,19 @@ public class SecurityConfig {
     private final UserService userService;
 
     private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
     private final CustomLogoutHandler customLogoutHandler;
 
     public SecurityConfig(JwtFilter jwtFIlter,
                           UserService userService,
-                          CustomAccessDeniedHandler accessDeniedHandler,
+                          CustomAccessDeniedHandler accessDeniedHandler, JwtAuthEntryPoint jwtAuthEntryPoint,
                           CustomLogoutHandler customLogoutHandler) {
 
         this.jwtFIlter = jwtFIlter;
         this.userService = userService;
         this.accessDeniedHandler = accessDeniedHandler;
+        this.jwtAuthEntryPoint = jwtAuthEntryPoint;
         this.customLogoutHandler = customLogoutHandler;
     }
 
@@ -70,6 +73,9 @@ public class SecurityConfig {
                     log.logoutSuccessHandler((request, response, authentication) ->
                             SecurityContextHolder.clearContext());
                 });
+        http.exceptionHandling(ex -> ex
+                .authenticationEntryPoint(jwtAuthEntryPoint)
+        );
 
         return http.build();
     }

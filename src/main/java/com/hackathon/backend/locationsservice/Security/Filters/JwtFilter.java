@@ -2,6 +2,7 @@ package com.hackathon.backend.locationsservice.Security.Filters;
 
 import com.hackathon.backend.locationsservice.Security.Services.JwtService;
 import com.hackathon.backend.locationsservice.Security.Services.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,14 +21,12 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-
     private final UserService userService;
 
     public JwtFilter(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
         this.userService = userService;
     }
-
 
     @Override
     protected void doFilterInternal(
@@ -37,47 +36,39 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
-        String username;
-        // TODO: looks like shit
+
         try {
-            username = jwtService.extractUsername(token);
-        } catch (io.jsonwebtoken.ExpiredJwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"JWT expired\"}");
-            return;
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Invalid JWT\"}");
-            return;
-        }
+            String username = jwtService.extractUsername(token);
 
-        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService.loadUserByUsername(username);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userService.loadUserByUsername(username);
 
-            if(jwtService.isValid(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+                if (jwtService.isValid(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
 
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (ExpiredJwtException ex) {
+            request.setAttribute("expired", true);
+        } catch (Exception ex) {
+            request.setAttribute("jwt_error", ex.getMessage());
         }
 
         filterChain.doFilter(request, response);
-
     }
 }

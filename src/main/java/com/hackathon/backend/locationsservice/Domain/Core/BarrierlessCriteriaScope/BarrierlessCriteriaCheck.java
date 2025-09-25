@@ -3,8 +3,12 @@ package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaSc
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -33,5 +37,17 @@ public class BarrierlessCriteriaCheck {
 
     private boolean hasIssue;
 
-    private boolean barrierFreeRating;
+    private float barrierFreeRating;
+
+    @NotNull
+    @Column(nullable = false)
+    private UUID createdBy;
+
+    @NotNull
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @NotNull
+    @Column(nullable = false)
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

@@ -1,6 +1,6 @@
 package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
-import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.Base.NamedEntity;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
@@ -9,14 +9,18 @@ import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Point;
 
-
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -35,6 +39,11 @@ public class Location extends NamedEntity {
     @NotNull
     @Column(columnDefinition = "geometry(Point,4326)", nullable = false)
     private Point coordinates;
+
+
+    //, cascade = CascadeType.ALL, orphanRemoval = true TODO: maybe
+    @OneToMany(mappedBy = "location")
+    private Set<BarrierlessCriteriaCheck> barrierlessCriteriaChecks = new HashSet<>();
 
     @NotNull
     @ManyToOne

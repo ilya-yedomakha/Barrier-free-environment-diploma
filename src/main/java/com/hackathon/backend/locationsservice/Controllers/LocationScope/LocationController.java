@@ -71,6 +71,27 @@ public class LocationController {
         }
     }
 
+//    @GetMapping("/{location_id}/barrierless_criteria_checks")
+//    public ResponseEntity<?> getBarrierlessCriteriaChecksByLocationId(@PathVariable(name = "location_id") UUID locationId) {
+//        Result<Location, LocationReadDTO> Result = locationService.getById(locationId);
+//        if (Result.isSuccess()) {
+//            return ResponseEntity.ok(Result.getEntityDTO());
+//        } else {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+//        }
+//    }
+    @PutMapping("/merge/{new_location_id}/into/{old_location_id}/")
+    public ResponseEntity<?> mergeBarrierLocationChecks(@PathVariable(name = "new_location_id") UUID newLocationId, @PathVariable(name = "old_location_id") UUID oldLocationId){
+        Result<Location, LocationReadDTO> Result = locationService.mergeBarrierLocationChecks(newLocationId, oldLocationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
+
+//    @PutMapping("/{location_id}/")
+
     @PostMapping
     ResponseEntity<?> add(@RequestBody LocationCreateDTO locationCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.add(locationCreateDTO);

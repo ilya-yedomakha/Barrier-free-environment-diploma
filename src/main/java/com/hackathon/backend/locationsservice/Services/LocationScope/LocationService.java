@@ -4,6 +4,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
@@ -199,4 +200,29 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     }
 
 
+    public Result<Location, LocationReadDTO> mergeBarrierLocationChecks(UUID newLocationId, UUID oldLocationId) {
+        Optional<Location> newLocationOptional = repository.findById(newLocationId);
+        Optional<Location> oldLocationOptional = repository.findById(oldLocationId);
+        Result<Location, LocationReadDTO> res;
+        if (newLocationOptional.isEmpty()){
+            return Result.failure(EntityError.notFound(type,newLocationId));
+        }
+        if (oldLocationOptional.isEmpty()){
+            return Result.failure(EntityError.notFound(type,oldLocationId));
+        }
+        Location oldLocation = oldLocationOptional.get();
+        Location newLocation = newLocationOptional.get();
+
+        Set<BarrierlessCriteriaCheck> newBarrierlessCriteriaChecks = newLocation.getBarrierlessCriteriaChecks();
+
+        oldLocation.getBarrierlessCriteriaChecks().addAll(newBarrierlessCriteriaChecks);
+        newLocation.getBarrierlessCriteriaChecks().clear();
+
+        repository.save(oldLocation);
+        repository.save(newLocation);
+        res = Result.success();
+        res.entity = oldLocation;
+        res.entityDTO = mapper.toDto(oldLocation);
+        return res;
+    }
 }

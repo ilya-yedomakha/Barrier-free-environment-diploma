@@ -58,7 +58,8 @@ public class SecurityConfig {
                     auth.requestMatchers("/login/**","/registration/**", "/css/**", "/refresh_token/**", "/")
                             .permitAll();
                     auth.requestMatchers("/admin/**").hasAuthority("ADMIN");
-                    auth.anyRequest().authenticated();
+//                    auth.requestMatchers("/logout/**").authenticated();
+                    auth.anyRequest().permitAll();
                 })
                 .userDetailsService(userService)
                 .exceptionHandling(e -> {

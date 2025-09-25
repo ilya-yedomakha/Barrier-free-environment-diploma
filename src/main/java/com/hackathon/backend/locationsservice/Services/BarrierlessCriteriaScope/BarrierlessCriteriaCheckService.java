@@ -36,9 +36,12 @@ public class BarrierlessCriteriaCheckService{
 
 
     public Result<BarrierlessCriteriaCheck, BarrierlessCriteriaCheckReadDTO> add(BarrierlessCriteriaCheckCreateDTO barrierlessCriteriaCheckCreateDTO) {
-        Optional<BarrierlessCriteria> barrierlessCriteria = barrierlessCriteriaRepository.findById(barrierlessCriteriaCheckCreateDTO.getBarrierlessCriteriaId());
-        Optional<Location> location = locationRepository.findById(barrierlessCriteriaCheckCreateDTO.getLocationId());
-        Optional<User> user = userRepository.findById(barrierlessCriteriaCheckCreateDTO.getUserId());
+        UUID barrierlessCriteriaId = barrierlessCriteriaCheckCreateDTO.getBarrierlessCriteriaId();
+        UUID locationId = barrierlessCriteriaCheckCreateDTO.getLocationId();
+        UUID userId = barrierlessCriteriaCheckCreateDTO.getUserId();
+        Optional<BarrierlessCriteria> barrierlessCriteria = barrierlessCriteriaRepository.findById(barrierlessCriteriaId);
+        Optional<Location> location = locationRepository.findById(locationId);
+        Optional<User> user = userRepository.findById(userId);
         if (barrierlessCriteria.isEmpty()) {
             return Result.failure(EntityError.notFound(BarrierlessCriteria.class,barrierlessCriteriaCheckCreateDTO.getBarrierlessCriteriaId()));
         }
@@ -52,7 +55,9 @@ public class BarrierlessCriteriaCheckService{
         if (newBarrierlessCriteriaCheck == null) {
             return Result.failure(EntityError.nullReference(BarrierlessCriteriaCheck.class));
         }
+        BarrierlessCriteriaCheckEmbeddedId id = new BarrierlessCriteriaCheckEmbeddedId(locationId,barrierlessCriteriaId,userId);
 
+        newBarrierlessCriteriaCheck.setBarrierlessCriteriaCheckId(id);
         BarrierlessCriteriaCheck savedBarrierlessCriteriaCheck = barrierlessCriteriaCheckRepository.save(newBarrierlessCriteriaCheck);
         Result<BarrierlessCriteriaCheck, BarrierlessCriteriaCheckReadDTO> res = Result.success();
         res.entity = savedBarrierlessCriteriaCheck;

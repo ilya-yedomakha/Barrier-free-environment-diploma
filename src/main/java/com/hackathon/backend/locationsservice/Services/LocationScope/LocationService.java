@@ -20,6 +20,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
+import jakarta.transaction.Transactional;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
@@ -200,29 +201,39 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     }
 
 
+    @Transactional
     public Result<Location, LocationReadDTO> mergeBarrierLocationChecks(UUID newLocationId, UUID oldLocationId) {
         Optional<Location> newLocationOptional = repository.findById(newLocationId);
         Optional<Location> oldLocationOptional = repository.findById(oldLocationId);
-        Result<Location, LocationReadDTO> res;
-        if (newLocationOptional.isEmpty()){
-            return Result.failure(EntityError.notFound(type,newLocationId));
+
+        if (newLocationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(type, newLocationId));
         }
-        if (oldLocationOptional.isEmpty()){
-            return Result.failure(EntityError.notFound(type,oldLocationId));
+        if (oldLocationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(type, oldLocationId));
         }
+
         Location oldLocation = oldLocationOptional.get();
         Location newLocation = newLocationOptional.get();
 
-        Set<BarrierlessCriteriaCheck> newBarrierlessCriteriaChecks = newLocation.getBarrierlessCriteriaChecks();
+        // копіюємо, щоб уникнути ConcurrentModificationException
+        Set<BarrierlessCriteriaCheck> checksToMove = new HashSet<>(newLocation.getBarrierlessCriteriaChecks());
 
-        oldLocation.getBarrierlessCriteriaChecks().addAll(newBarrierlessCriteriaChecks);
+        for (BarrierlessCriteriaCheck check : checksToMove) {
+            // передаємо oldLocation + entityManager
+            check.reassignTo(oldLocation, entityManager);
+        }
+
+        // оновлюємо колекції у Location-ах
+        oldLocation.getBarrierlessCriteriaChecks().addAll(checksToMove);
         newLocation.getBarrierlessCriteriaChecks().clear();
 
-        repository.save(oldLocation);
+        Location savedLocation = repository.save(oldLocation);
         repository.save(newLocation);
-        res = Result.success();
-        res.entity = oldLocation;
-        res.entityDTO = mapper.toDto(oldLocation);
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = savedLocation;
+        res.entityDTO = mapper.toDto(savedLocation);
         return res;
     }
 }

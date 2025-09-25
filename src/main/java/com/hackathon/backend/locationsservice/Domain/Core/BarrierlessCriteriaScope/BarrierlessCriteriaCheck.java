@@ -50,4 +50,36 @@ public class BarrierlessCriteriaCheck {
     @NotNull
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public void reassignTo(Location newLocation, EntityManager em) {
+        BarrierlessCriteriaCheckEmbeddedId newId =
+                new BarrierlessCriteriaCheckEmbeddedId(
+                        newLocation.getId(),
+                        this.getBarrierlessCriteriaCheckId().getBarrierlessCriteriaId(),
+                        this.getBarrierlessCriteriaCheckId().getUserId()
+                );
+
+        BarrierlessCriteriaCheck newCheck = new BarrierlessCriteriaCheck();
+        newCheck.setBarrierlessCriteriaCheckId(newId);
+        newCheck.setLocation(newLocation);
+        newCheck.setOtherFieldsFrom(this);
+
+        em.persist(newCheck);
+        em.remove(this);
+    }
+
+
+    public void setOtherFieldsFrom(BarrierlessCriteriaCheck other) {
+        // barrierlessCriteria і user у тебе входять у EmbeddedId,
+        // але це @ManyToOne зв’язки – їх теж треба виставити на новому об’єкті
+        this.barrierlessCriteria = other.getBarrierlessCriteria();
+        this.user = other.getUser();
+
+        this.comment = other.getComment();
+        this.hasIssue = other.isHasIssue();
+        this.barrierFreeRating = other.getBarrierFreeRating();
+        this.createdBy = other.getCreatedBy();
+        this.createdAt = other.getCreatedAt();
+        this.updatedAt = other.getUpdatedAt();
+    }
 }

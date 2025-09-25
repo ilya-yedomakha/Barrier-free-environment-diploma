@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -44,5 +45,6 @@ public class BarrierlessCriteria extends BaseEntity {
 
     @Enumerated(value = EnumType.STRING)
     @Column(name = "rank", nullable = false)
+    @ColumnDefault("'moderate'")
     private BarrierlessCriteriaRank barrierlessCriteriaRank;
 }

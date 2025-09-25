@@ -88,8 +88,9 @@ public class BarrierlessCriteriaCheckService{
         return barrierlessCriteriaCheckRepository.findAll();
     }
 
-    public List<BarrierlessCriteriaCheck> findAllBarrierCriteriaCheckByLocationId(UUID locationId) {
-        return List.of();
+    public List<BarrierlessCriteriaCheckReadDTO> findAllBarrierCriteriaCheckByLocationId(UUID locationId) {
+
+        return barrierlessCriteriaCheckRepository.findAllByLocation_Id(locationId).stream().map(barrierlessCriteriaCheckMapper::toDto).toList();
     }
 
     public List<BarrierlessCriteriaCheck> findAllBarrierCriteriaCheckByUserId(UUID userId) {

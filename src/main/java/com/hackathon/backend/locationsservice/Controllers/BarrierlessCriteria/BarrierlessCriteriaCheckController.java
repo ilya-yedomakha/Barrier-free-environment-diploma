@@ -55,7 +55,7 @@ public class BarrierlessCriteriaCheckController {
 //    }
 
     @GetMapping("/location/{location_id}")
-    ResponseEntity<List<BarrierlessCriteriaCheck>> getBarrierlessCriteriaCheckByLocation(@PathVariable("location_id") String id) {
+    ResponseEntity<List<BarrierlessCriteriaCheckReadDTO>> getBarrierlessCriteriaCheckByLocation(@PathVariable("location_id") String id) {
 
         return ResponseEntity.ok(barrierlessCriteriaCheckService.findAllBarrierCriteriaCheckByLocationId(UUID.fromString(id)));
     }

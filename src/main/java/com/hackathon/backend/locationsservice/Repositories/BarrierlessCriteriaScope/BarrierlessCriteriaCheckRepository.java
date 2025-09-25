@@ -11,8 +11,12 @@ import java.util.UUID;
 @Repository
 public interface BarrierlessCriteriaCheckRepository
         extends JpaRepository<BarrierlessCriteriaCheck, BarrierlessCriteriaCheckEmbeddedId> {
+
     List<BarrierlessCriteriaCheck> findAllByBarrierlessCriteria_IdAndLocation_Id(UUID barrierlessCriteriaId,
                                                                                  UUID locationId);
+
+    List<BarrierlessCriteriaCheck> findAllByLocation_Id(UUID locationId);
+
 
 }
 

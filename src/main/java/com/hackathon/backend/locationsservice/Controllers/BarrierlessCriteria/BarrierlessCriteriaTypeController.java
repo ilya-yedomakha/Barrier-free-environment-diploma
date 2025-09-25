@@ -24,14 +24,18 @@ import java.util.UUID;
 
 public class BarrierlessCriteriaTypeController {
     private final BarrierlessCriteriaTypeService barrierlessCriteriaTypeService;
-    @GetMapping("/")
-    public ResponseEntity<?> getAllBarrierlessCriteriaTypes() {
+    @GetMapping()
+    public ResponseEntity<?> getAllBarrierlessCriteriaTypes(@RequestParam(name = "group_id", required = false) UUID groupId) {
+       if(groupId != null) {
+           return ResponseEntity.ok(barrierlessCriteriaTypeService.findAllByGroupId(groupId));
+       }else{
         Result<BarrierlessCriteriaType, BarrierlessCriteriaTypeReadDTO> Result = barrierlessCriteriaTypeService.getAll();
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTOs());
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
         }
+       }
     }
 
     @GetMapping("/{barrierless_criteria_type_id}/")

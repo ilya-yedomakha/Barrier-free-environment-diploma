@@ -24,15 +24,20 @@ public class BarrierlessCriteriaController {
 
     private final BarrierlessCriteriaService barrierlessCriteriaService;
 
-    @GetMapping()
-    public ResponseEntity<?> getAllBarrierlessCriterias() {
-        Result<BarrierlessCriteria, BarrierlessCriteriaReadDTO> Result = barrierlessCriteriaService.getAll();
-        if (Result.isSuccess()) {
-            return ResponseEntity.ok(Result.getEntityDTOs());
+    @GetMapping
+    public ResponseEntity<?> getBarrierlessCriterias(@RequestParam(name = "type_id", required = false) UUID criteriaTypeId) {
+        if (criteriaTypeId != null) {
+            return ResponseEntity.ok(barrierlessCriteriaService.findAllByTypeId(criteriaTypeId));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+            Result<BarrierlessCriteria, BarrierlessCriteriaReadDTO> result = barrierlessCriteriaService.getAll();
+            if (result.isSuccess()) {
+                return ResponseEntity.ok(result.getEntityDTOs());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result.getError());
+            }
         }
     }
+
 
     @GetMapping("/{barrierless_criteria_id}/")
     public ResponseEntity<?> getBarrierlessCriteriaById(@PathVariable(name = "barrierless_criteria_id") UUID barrierlessCriteriaId) {
@@ -43,6 +48,7 @@ public class BarrierlessCriteriaController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
         }
     }
+
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")

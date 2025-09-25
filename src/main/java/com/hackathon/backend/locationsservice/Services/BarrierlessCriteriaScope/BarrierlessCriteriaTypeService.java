@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class BarrierlessCriteriaTypeService extends GeneralService<BarrierlessCriteriaTypeMapper, BarrierlessCriteriaTypeReadDTO, BarrierlessCriteriaTypeCreateDTO, BarrierlessCriteriaType, BarrierlessCriteriaTypeRepository> {
@@ -61,6 +63,11 @@ public class BarrierlessCriteriaTypeService extends GeneralService<BarrierlessCr
         res.entityDTO = mapper.toDto(savedBarrierlessCriteriaType);
 
         return res;
+    }
+
+    public List<BarrierlessCriteriaTypeReadDTO> findAllByGroupId(UUID groupId){
+
+        return super.repository.findByBarrierlessCriteriaGroup_Id(groupId).stream().map(mapper::toDto).toList();
     }
 
 }

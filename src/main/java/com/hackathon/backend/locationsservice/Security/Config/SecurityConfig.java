@@ -20,6 +20,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -52,10 +57,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.csrf(AbstractHttpConfigurer::disable);
+        http.csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> {});
 
         http.authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/login/**","/registration/**", "/css/**", "/refresh_token/**", "/")
+                    auth.requestMatchers("/login/**","/registration/**", "/css/**", "/refresh_token/**", "/", "/swagger-ui")
                             .permitAll();
                     auth.requestMatchers("/admin/**").hasAuthority("ADMIN");
 //                    auth.requestMatchers("/logout/**").authenticated();
@@ -93,4 +99,15 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(List.of("http://localhost:4200")); // фронт
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
 }

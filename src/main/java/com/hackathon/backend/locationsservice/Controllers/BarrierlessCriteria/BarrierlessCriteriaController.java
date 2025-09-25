@@ -62,4 +62,12 @@ public class BarrierlessCriteriaController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
         }
     }
+
+    @PutMapping("/{criteria_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    ResponseEntity<?> updateBarrierlessCriteria(@PathVariable("criteria_id") UUID criteriaId,
+                                                @RequestBody BarrierlessCriteriaCreateDTO check) {
+
+        return ResponseEntity.ok(barrierlessCriteriaService.update(criteriaId, check));
+    }
 }

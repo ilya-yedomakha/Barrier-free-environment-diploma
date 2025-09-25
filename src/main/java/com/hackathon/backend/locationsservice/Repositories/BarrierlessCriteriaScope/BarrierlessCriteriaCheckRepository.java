@@ -17,6 +17,9 @@ public interface BarrierlessCriteriaCheckRepository
 
     List<BarrierlessCriteriaCheck> findAllByLocation_Id(UUID locationId);
 
+    List<BarrierlessCriteriaCheck> findAllByBarrierlessCriteria_Id(UUID barrierlessCriteriaId);
+
+
 
 }
 

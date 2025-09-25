@@ -12,6 +12,7 @@ import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,9 +58,30 @@ public class BarrierlessCriteriaService extends GeneralService<BarrierlessCriter
         return res;
     }
 
-    public List<BarrierlessCriteria> findAllByTypeId(UUID criteriaTypeId){
+    public List<BarrierlessCriteriaReadDTO> findAllByTypeId(UUID criteriaTypeId){
 
-        return repository.findByBarrierlessCriteriaType_Id(criteriaTypeId);
+        return repository.findByBarrierlessCriteriaType_Id(criteriaTypeId).stream().map(mapper::toDto).toList();
+    }
+
+    public BarrierlessCriteriaReadDTO update(UUID criteriaId, BarrierlessCriteriaCreateDTO newCriteriaCreateDTO){
+
+        BarrierlessCriteria criteria = repository.findById(criteriaId).orElse(null);
+
+        if(criteria == null){
+            return null;
+        }
+
+        criteria.setName(newCriteriaCreateDTO.getName());
+        criteria.setDescription(newCriteriaCreateDTO.getDescription());
+        criteria.setUpdatedAt(LocalDateTime.now());
+        if(newCriteriaCreateDTO.getBarrierlessCriteriaTypeId() != null){
+            criteria.setBarrierlessCriteriaType(barrierlessCriteriaTypeRepository
+                    .getReferenceById(newCriteriaCreateDTO.getBarrierlessCriteriaTypeId()));
+
+        }
+
+       return mapper.toDto(repository.save(criteria));
+
     }
 
 }

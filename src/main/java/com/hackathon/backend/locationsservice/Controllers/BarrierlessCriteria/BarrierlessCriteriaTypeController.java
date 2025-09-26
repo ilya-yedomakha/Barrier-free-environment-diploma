@@ -58,4 +58,19 @@ public class BarrierlessCriteriaTypeController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
         }
     }
+
+    @PutMapping("/{type_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    ResponseEntity<?> update(@PathVariable("type_id") UUID typeId,
+                             @RequestBody BarrierlessCriteriaTypeCreateDTO barrierlessCriteriaTypeCreateDTO) {
+
+        Result<BarrierlessCriteriaType, BarrierlessCriteriaTypeReadDTO> Result =
+                barrierlessCriteriaTypeService.update(typeId,barrierlessCriteriaTypeCreateDTO);
+
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
 }

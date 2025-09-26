@@ -56,4 +56,18 @@ public class BarrierlessCriteriaGroupController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
         }
     }
+
+    @PutMapping("/{group_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    ResponseEntity<?> add(@PathVariable("group_id") UUID groupId,
+                          @RequestBody BarrierlessCriteriaGroupCreateDTO barrierlessCriteriaGroupCreateDTO) {
+
+        Result<BarrierlessCriteriaGroup, BarrierlessCriteriaGroupReadDTO> result = barrierlessCriteriaGroupService.update(groupId, barrierlessCriteriaGroupCreateDTO);
+
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
 }

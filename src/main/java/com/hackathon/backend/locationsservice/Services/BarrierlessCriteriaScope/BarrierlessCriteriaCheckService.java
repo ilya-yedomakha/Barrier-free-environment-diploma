@@ -101,4 +101,10 @@ public class BarrierlessCriteriaCheckService{
                                                                                          UUID BarrierlessCriteriaTypeId) {
       return  barrierlessCriteriaCheckRepository.findAllByBarrierlessCriteria_IdAndLocation_Id(locationId, BarrierlessCriteriaTypeId);
     }
+
+    public List<BarrierlessCriteriaCheckReadDTO> findAllByCriteria_Id(UUID barrierlessCriteriaId) {
+
+        return barrierlessCriteriaCheckRepository.findAllByBarrierlessCriteria_Id(barrierlessCriteriaId).stream()
+                .map(barrierlessCriteriaCheckMapper::toDto).toList();
+    }
 }

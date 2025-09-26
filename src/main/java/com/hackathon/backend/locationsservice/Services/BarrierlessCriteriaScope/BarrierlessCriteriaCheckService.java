@@ -5,14 +5,13 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Barrier
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.BarrierlessCriteriaScope.BarrierlessCriteriaCheckReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.BarrierlessCriteriaScope.BarrierlessCriteriaReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.BarrierlessCriteriaScope.BarrierlessCriteriaCheckMapper;
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheckEmbeddedId;
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.*;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
+import com.hackathon.backend.locationsservice.Result.EntityErrors.CheckError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
@@ -22,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -39,21 +39,29 @@ public class BarrierlessCriteriaCheckService{
         UUID barrierlessCriteriaId = barrierlessCriteriaCheckCreateDTO.getBarrierlessCriteriaId();
         UUID locationId = barrierlessCriteriaCheckCreateDTO.getLocationId();
         UUID userId = barrierlessCriteriaCheckCreateDTO.getUserId();
-        Optional<BarrierlessCriteria> barrierlessCriteria = barrierlessCriteriaRepository.findById(barrierlessCriteriaId);
-        Optional<Location> location = locationRepository.findById(locationId);
-        Optional<User> user = userRepository.findById(userId);
-        if (barrierlessCriteria.isEmpty()) {
+        Optional<BarrierlessCriteria> barrierlessCriteriaOptional = barrierlessCriteriaRepository.findById(barrierlessCriteriaId);
+        Optional<Location> locationOptional = locationRepository.findById(locationId);
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (barrierlessCriteriaOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(BarrierlessCriteria.class,barrierlessCriteriaCheckCreateDTO.getBarrierlessCriteriaId()));
         }
-        if (location.isEmpty()) {
+        if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class,barrierlessCriteriaCheckCreateDTO.getLocationId()));
         }
-        if (user.isEmpty()) {
+        if (userOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(User.class,barrierlessCriteriaCheckCreateDTO.getUserId()));
         }
         BarrierlessCriteriaCheck newBarrierlessCriteriaCheck = barrierlessCriteriaCheckMapper.toEntity(barrierlessCriteriaCheckCreateDTO);
         if (newBarrierlessCriteriaCheck == null) {
             return Result.failure(EntityError.nullReference(BarrierlessCriteriaCheck.class));
+        }
+        BarrierlessCriteria barrierlessCriteria = barrierlessCriteriaOptional.get();
+        Location location = locationOptional.get();
+        LocationType locationType = location.getType();
+        Set<LocationType> criteriaLocationTypes = barrierlessCriteria.getBarrierlessCriteriaType().getBarrierlessCriteriaGroup().getLocationTypes();
+        if (!criteriaLocationTypes.contains(locationType)){
+            return Result.failure(CheckError.mismatch(location.getType().getId(),barrierlessCriteriaId));
         }
         BarrierlessCriteriaCheckEmbeddedId id = new BarrierlessCriteriaCheckEmbeddedId(locationId,barrierlessCriteriaId,userId);
 

@@ -245,8 +245,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
         }
-        Optional<LocationType> locationType = locationTypeRepository.findById(locationCreateDTO.getType());
-        if (locationType.isEmpty()) {
+        Optional<LocationType> newLocationTypeOptional = locationTypeRepository.findById(locationCreateDTO.getType());
+        if (newLocationTypeOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(LocationType.class, locationCreateDTO.getType()));
         }
         Location newLocation = mapper.toEntity(locationCreateDTO);
@@ -257,7 +257,6 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (checkNameDuplicates(locations, newLocation.getName())) {
             return Result.failure(EntityError.sameName(type, newLocation.getName()));
         }
-        ;
 
 
         for (Location location_iter : locations) {
@@ -267,20 +266,20 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         }
 
 
-        Location location = locationOptional.get();
-        location.setAddress(locationCreateDTO.getAddress());
-        location.setUpdatedAt(locationCreateDTO.getUpdatedAt());
-        location.setDescription(locationCreateDTO.getDescription());
-        location.setContacts(locationCreateDTO.getContacts());
-        location.setStatus(locationCreateDTO.getStatus());
-        if (!locationType.get().equals(location.getType())) {
-            BarrierlessCriteriaGroup barrierlessCriteriaGroup = locationType.get().getBarrierlessCriteriaGroup();
-            Set<BarrierlessCriteriaType> barrierlessCriteriaTypes = barrierlessCriteriaGroup.getBarrierlessCriteriaTypes();
+        Location oldLocation = locationOptional.get();
+        oldLocation.setAddress(locationCreateDTO.getAddress());
+        oldLocation.setUpdatedAt(locationCreateDTO.getUpdatedAt());
+        oldLocation.setDescription(locationCreateDTO.getDescription());
+        oldLocation.setContacts(locationCreateDTO.getContacts());
+        oldLocation.setStatus(locationCreateDTO.getStatus());
+        if (!newLocationTypeOptional.get().equals(oldLocation.getType())) {
+            BarrierlessCriteriaGroup oldLocBarrierlessCriteriaGroup = oldLocation.getType().getBarrierlessCriteriaGroup();
+            Set<BarrierlessCriteriaType> oldLocbarrierlessCriteriaTypes = oldLocBarrierlessCriteriaGroup.getBarrierlessCriteriaTypes();
             Set<BarrierlessCriteria> restrictedBarrierlessCriterias = new HashSet<>();
-            for (BarrierlessCriteriaType type : barrierlessCriteriaTypes) {
-                restrictedBarrierlessCriterias.addAll(type.getBarrierlessCriterias());
+            for (BarrierlessCriteriaType criteriaType : oldLocbarrierlessCriteriaTypes) {
+                restrictedBarrierlessCriterias.addAll(criteriaType.getBarrierlessCriterias());
             }
-            Set<BarrierlessCriteriaCheck> locationBarrierlessCriteriaChecks = location.getBarrierlessCriteriaChecks();
+            Set<BarrierlessCriteriaCheck> locationBarrierlessCriteriaChecks = oldLocation.getBarrierlessCriteriaChecks();
             List<BarrierlessCriteriaCheck> toRemove = new ArrayList<>();
             for (BarrierlessCriteriaCheck locCheck : locationBarrierlessCriteriaChecks) {
                 for (BarrierlessCriteria restrictCriteria : restrictedBarrierlessCriterias) {
@@ -290,13 +289,15 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                     }
                 }
             }
-            toRemove.forEach(location.getBarrierlessCriteriaChecks()::remove);
+            toRemove.forEach(oldLocation.getBarrierlessCriteriaChecks()::remove);
             barrierlessCriteriaCheckRepository.deleteAll(toRemove);
 
         }
-        location.setType(locationType.get());
+        oldLocation.setType(newLocationTypeOptional.get());
+        oldLocation.setOrganizationId(locationCreateDTO.organizationId);
+        oldLocation.setLastVerifiedAt(locationCreateDTO.getLastVerifiedAt());
 
-        Location savedLocation = repository.save(location);
+        Location savedLocation = repository.save(oldLocation);
         Result<Location, LocationReadDTO> res = Result.success();
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);

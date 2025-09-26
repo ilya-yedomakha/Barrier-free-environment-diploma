@@ -5,6 +5,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationS
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
 import jakarta.validation.constraints.Max;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class LocationController {
 
     private final LocationService locationService;
+    private final LocationRepository locationRepository;
 
     @GetMapping()
     public ResponseEntity<?> getLocations(
@@ -55,8 +57,7 @@ public class LocationController {
         filters.put("limit", limit);
 
 
-
-        Result<Location,LocationListViewDTO> result = locationService.getAll(filters);
+        Result<Location, LocationListViewDTO> result = locationService.getAll(filters);
 
         return ResponseEntity.ok(result.getEntityDTO());
     }
@@ -71,7 +72,7 @@ public class LocationController {
         }
     }
 
-//    @GetMapping("/{location_id}/barrierless_criteria_checks")
+    //    @GetMapping("/{location_id}/barrierless_criteria_checks")
 //    public ResponseEntity<?> getBarrierlessCriteriaChecksByLocationId(@PathVariable(name = "location_id") UUID locationId) {
 //        Result<Location, LocationReadDTO> Result = locationService.getById(locationId);
 //        if (Result.isSuccess()) {
@@ -81,7 +82,7 @@ public class LocationController {
 //        }
 //    }
     @PutMapping("/merge/{new_location_id}/into/{old_location_id}")
-    public ResponseEntity<?> mergeBarrierLocationChecks(@PathVariable(name = "new_location_id") UUID newLocationId, @PathVariable(name = "old_location_id") UUID oldLocationId){
+    public ResponseEntity<?> mergeBarrierLocationChecks(@PathVariable(name = "new_location_id") UUID newLocationId, @PathVariable(name = "old_location_id") UUID oldLocationId) {
         Result<Location, LocationReadDTO> Result = locationService.mergeBarrierLocationChecks(newLocationId, oldLocationId);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
@@ -90,7 +91,15 @@ public class LocationController {
         }
     }
 
-//    @PutMapping("/{location_id}/")
+    @PutMapping("/{location_id}/")
+    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @RequestBody LocationCreateDTO locationCreateDTO) {
+        Result<Location, LocationReadDTO> Result = locationService.update(locationId, locationCreateDTO);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
 
     @PostMapping
     ResponseEntity<?> add(@RequestBody LocationCreateDTO locationCreateDTO) {

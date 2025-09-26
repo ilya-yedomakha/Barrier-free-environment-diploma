@@ -4,12 +4,15 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
 import com.hackathon.backend.locationsservice.Domain.Verification;
+import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
@@ -32,10 +35,12 @@ import java.util.*;
 public class LocationService extends GeneralService<LocationMapper, LocationReadDTO, LocationCreateDTO, Location, LocationRepository> {
 
     private final LocationTypeRepository locationTypeRepository;
+    private final BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository;
 
-    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository) {
+    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository) {
         super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
+        this.barrierlessCriteriaCheckRepository = barrierlessCriteriaCheckRepository;
     }
 
     @PersistenceContext
@@ -157,16 +162,17 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     public Result<Location, LocationReadDTO> add(LocationCreateDTO locationCreateDTO) {
         Optional<LocationType> locationType = locationTypeRepository.findById(locationCreateDTO.getType());
         if (locationType.isEmpty()) {
-            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class,locationCreateDTO.getType()));
+            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class, locationCreateDTO.getType()));
         }
         Location newLocation = mapper.toEntity(locationCreateDTO);
         if (newLocation == null) {
             return Result.failure(EntityError.nullReference(type));
         }
         List<Location> locations = repository.findAll();
-        if(checkNameDuplicates(locations,newLocation.getName())){
+        if (checkNameDuplicates(locations, newLocation.getName())) {
             return Result.failure(EntityError.sameName(type, newLocation.getName()));
-        };
+        }
+        ;
 
         //TODO: There can be same descriptions for different locations?
 //        List<Location> locationDescriptionDuplicates = repository.findAllByDescription(newLocation.getDescription());
@@ -216,15 +222,12 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Location oldLocation = oldLocationOptional.get();
         Location newLocation = newLocationOptional.get();
 
-        // копіюємо, щоб уникнути ConcurrentModificationException
         Set<BarrierlessCriteriaCheck> checksToMove = new HashSet<>(newLocation.getBarrierlessCriteriaChecks());
 
         for (BarrierlessCriteriaCheck check : checksToMove) {
-            // передаємо oldLocation + entityManager
             check.reassignTo(oldLocation, entityManager);
         }
 
-        // оновлюємо колекції у Location-ах
         oldLocation.getBarrierlessCriteriaChecks().addAll(checksToMove);
         newLocation.getBarrierlessCriteriaChecks().clear();
 
@@ -235,5 +238,70 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
         return res;
+    }
+
+    public Result<Location, LocationReadDTO> update(UUID locationId, LocationCreateDTO locationCreateDTO) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+        Optional<LocationType> locationType = locationTypeRepository.findById(locationCreateDTO.getType());
+        if (locationType.isEmpty()) {
+            return Result.failure(EntityError.notFound(LocationType.class, locationCreateDTO.getType()));
+        }
+        Location newLocation = mapper.toEntity(locationCreateDTO);
+        if (newLocation == null) {
+            return Result.failure(EntityError.nullReference(type));
+        }
+        List<Location> locations = repository.findAll();
+        if (checkNameDuplicates(locations, newLocation.getName())) {
+            return Result.failure(EntityError.sameName(type, newLocation.getName()));
+        }
+        ;
+
+
+        for (Location location_iter : locations) {
+            if (location_iter.getCoordinates().equals(newLocation.getCoordinates())) {
+                return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));
+            }
+        }
+
+
+        Location location = locationOptional.get();
+        location.setAddress(locationCreateDTO.getAddress());
+        location.setUpdatedAt(locationCreateDTO.getUpdatedAt());
+        location.setDescription(locationCreateDTO.getDescription());
+        location.setContacts(locationCreateDTO.getContacts());
+        location.setStatus(locationCreateDTO.getStatus());
+        if (!locationType.get().equals(location.getType())) {
+            BarrierlessCriteriaGroup barrierlessCriteriaGroup = locationType.get().getBarrierlessCriteriaGroup();
+            Set<BarrierlessCriteriaType> barrierlessCriteriaTypes = barrierlessCriteriaGroup.getBarrierlessCriteriaTypes();
+            Set<BarrierlessCriteria> restrictedBarrierlessCriterias = new HashSet<>();
+            for (BarrierlessCriteriaType type : barrierlessCriteriaTypes) {
+                restrictedBarrierlessCriterias.addAll(type.getBarrierlessCriterias());
+            }
+            Set<BarrierlessCriteriaCheck> locationBarrierlessCriteriaChecks = location.getBarrierlessCriteriaChecks();
+            List<BarrierlessCriteriaCheck> toRemove = new ArrayList<>();
+            for (BarrierlessCriteriaCheck locCheck : locationBarrierlessCriteriaChecks) {
+                for (BarrierlessCriteria restrictCriteria : restrictedBarrierlessCriterias) {
+                    if (locCheck.getBarrierlessCriteria().equals(restrictCriteria)) {
+                        toRemove.add(locCheck);
+                        break;
+                    }
+                }
+            }
+            toRemove.forEach(location.getBarrierlessCriteriaChecks()::remove);
+            barrierlessCriteriaCheckRepository.deleteAll(toRemove);
+
+        }
+        location.setType(locationType.get());
+
+        Location savedLocation = repository.save(location);
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = savedLocation;
+        res.entityDTO = mapper.toDto(savedLocation);
+
+        return res;
+
     }
 }

@@ -21,6 +21,13 @@ public class EntityError {
         );
     }
 
+    public static <T> Error notFound(Class<T> type, Long id) {
+        return new Error(
+                type.getSimpleName() + ".NotFound",
+                type.getSimpleName() + " with the id: " + id + " was not found"
+        );
+    }
+
     public static <T> Error nullReference(Class<T> type) {
         return new Error(
                 type.getSimpleName() + ".NullReference",

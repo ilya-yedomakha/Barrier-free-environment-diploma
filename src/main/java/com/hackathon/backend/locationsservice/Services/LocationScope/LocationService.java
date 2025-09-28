@@ -1,18 +1,24 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationPendingCopyMapper;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
 import com.hackathon.backend.locationsservice.Domain.Verification;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationPendingCopyRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationScoreChgRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
@@ -28,8 +34,6 @@ import jakarta.transaction.Transactional;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -39,12 +43,16 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
     private final LocationTypeRepository locationTypeRepository;
     private final BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository;
+    private final LocationPendingCopyMapper locationPendingCopyMapper;
+    private final LocationPendingCopyRepository locationPendingCopyRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
 
-    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository, LocationScoreChgRepository locationScoreChgRepository) {
+    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository) {
         super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
         this.barrierlessCriteriaCheckRepository = barrierlessCriteriaCheckRepository;
+        this.locationPendingCopyMapper = locationPendingCopyMapper;
+        this.locationPendingCopyRepository = locationPendingCopyRepository;
         this.locationScoreChgRepository = locationScoreChgRepository;
     }
 
@@ -245,13 +253,83 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         return res;
     }
 
+    public Result<Location, LocationReadDTO> update(UUID locationId, Long locationPendingCopyId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+        Optional<LocationPendingCopy> locationPendingCopyOptional = locationPendingCopyRepository.findById(locationPendingCopyId);
+        if (locationPendingCopyOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(LocationPendingCopy.class, locationPendingCopyId));
+        }
+
+        Location oldLocation = locationOptional.get();
+        LocationPendingCopy locationPendingCopy = locationPendingCopyOptional.get();
+        List<Location> locations = repository.findAll();
+        if (checkNameDuplicates(locations, locationPendingCopy.getName())) {
+            return Result.failure(EntityError.sameName(type, locationPendingCopy.getName()));
+        }
+
+        oldLocation.setAddress(locationPendingCopy.getAddress());
+        oldLocation.setName(locationPendingCopy.getName());
+        oldLocation.setUpdatedAt(locationPendingCopy.getUpdatedAt());
+        oldLocation.setDescription(locationPendingCopy.getDescription());
+        oldLocation.setContacts(locationPendingCopy.getContacts());
+        oldLocation.setStatus(LocationStatusEnum.published);
+
+        oldLocation.setOrganizationId(locationPendingCopy.getOrganizationId());
+        oldLocation.setWorkingHours(locationPendingCopy.getWorkingHours());
+
+        Location savedLocation = repository.save(oldLocation);
+        locationPendingCopyRepository.delete(locationPendingCopy);
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = savedLocation;
+        res.entityDTO = mapper.toDto(savedLocation);
+
+        return res;
+
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> createPendingCopy(UUID locationId, LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+        locationPendingCopyCreateDTO.setLocationId(locationId);
+        LocationPendingCopy locationPendingCopy = locationPendingCopyMapper.toEntity(locationPendingCopyCreateDTO);
+        if (locationPendingCopy == null) {
+            return Result.failure(EntityError.nullReference(type));
+        }
+        List<Location> locations = repository.findAll();
+        if (checkNameDuplicates(locations, locationPendingCopy.getName())) {
+            return Result.failure(EntityError.sameName(LocationPendingCopy.class, locationPendingCopy.getName()));
+        }
+
+        locationPendingCopy.setLocation(locationOptional.get());
+        locationPendingCopy.setName(locationPendingCopyCreateDTO.getName());
+        locationPendingCopy.setDescription(locationPendingCopyCreateDTO.getDescription());
+        locationPendingCopy.setContacts(locationPendingCopyCreateDTO.getContacts());
+        locationPendingCopy.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
+        locationPendingCopy.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
+        locationPendingCopy.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
+        locationPendingCopy.setAddress(locationPendingCopyCreateDTO.getAddress());
+        locationPendingCopy.setStatus(locationPendingCopyCreateDTO.getStatus());
+
+
+        LocationPendingCopy savedLocationPendingCopy = locationPendingCopyRepository.save(locationPendingCopy);
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.entity = savedLocationPendingCopy;
+        res.entityDTO = locationPendingCopyMapper.toDto(savedLocationPendingCopy);
+        return res;
+    }
+
     public Result<Location, LocationReadDTO> update(UUID locationId, LocationCreateDTO locationCreateDTO) {
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
         }
-        Optional<LocationType> locationType = locationTypeRepository.findById(locationCreateDTO.getType());
-        if (locationType.isEmpty()) {
+        Optional<LocationType> newLocationTypeOptional = locationTypeRepository.findById(locationCreateDTO.getType());
+        if (newLocationTypeOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(LocationType.class, locationCreateDTO.getType()));
         }
         Location newLocation = mapper.toEntity(locationCreateDTO);
@@ -262,11 +340,10 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (checkNameDuplicates(locations, newLocation.getName())) {
             return Result.failure(EntityError.sameName(type, newLocation.getName()));
         }
-        ;
 
-
+        Location oldLocation = locationOptional.get();
         for (Location location_iter : locations) {
-            if (location_iter.getCoordinates().equals(newLocation.getCoordinates())) {
+            if (!location_iter.getId().equals(newLocation.getId()) && location_iter.getCoordinates().equals(newLocation.getCoordinates())) {
                 return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));
             }
         }
@@ -295,13 +372,19 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                     }
                 }
             }
-            toRemove.forEach(location.getBarrierlessCriteriaChecks()::remove);
+            toRemove.forEach(oldLocation.getBarrierlessCriteriaChecks()::remove);
             barrierlessCriteriaCheckRepository.deleteAll(toRemove);
 
         }
-        location.setType(locationType.get());
+        oldLocation.setType(newLocationTypeOptional.get());
+        oldLocation.setOrganizationId(newLocation.getOrganizationId());
+        oldLocation.setLastVerifiedAt(newLocation.getLastVerifiedAt());
+        oldLocation.setCoordinates(newLocation.getCoordinates());
+        oldLocation.setWorkingHours(newLocation.getWorkingHours());
+        oldLocation.setRejectionReason(newLocation.getRejectionReason());
+        oldLocation.setOverallAccessibilityScore(newLocation.getOverallAccessibilityScore());
 
-        Location savedLocation = repository.save(location);
+        Location savedLocation = repository.save(oldLocation);
         Result<Location, LocationReadDTO> res = Result.success();
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);

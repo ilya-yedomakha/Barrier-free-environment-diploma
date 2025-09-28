@@ -1,9 +1,12 @@
 package com.hackathon.backend.locationsservice.Controllers.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import com.hackathon.backend.locationsservice.Result.Result;
@@ -94,6 +97,26 @@ public class LocationController {
     @PutMapping("/{location_id}/")
     ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @RequestBody LocationCreateDTO locationCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.update(locationId, locationCreateDTO);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @PutMapping("/{location_id}/pending_copy/{pending_copy_id}")
+    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "pending_copy_id") Long pendingCopyId) {
+        Result<Location, LocationReadDTO> Result = locationService.update(locationId, pendingCopyId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @PostMapping("/to_pending/{location_id}/")
+    ResponseEntity<?> CreatePendingLocation(@PathVariable(name = "location_id") UUID locationId, @RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.createPendingCopy(locationId, locationPendingCopyCreateDTO);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
         } else {

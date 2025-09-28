@@ -34,6 +34,8 @@ import jakarta.transaction.Transactional;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -47,7 +49,10 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final LocationPendingCopyRepository locationPendingCopyRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
 
-    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository) {
+    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
+                    LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository,
+                    LocationScoreChgRepository locationScoreChgRepository) {
+
         super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
         this.barrierlessCriteriaCheckRepository = barrierlessCriteriaCheckRepository;
@@ -347,22 +352,22 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                 return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));
             }
         }
-
-
-        Location location = locationOptional.get();
-        location.setAddress(locationCreateDTO.getAddress());
-        location.setUpdatedAt(locationCreateDTO.getUpdatedAt());
-        location.setDescription(locationCreateDTO.getDescription());
-        location.setContacts(locationCreateDTO.getContacts());
-        location.setStatus(locationCreateDTO.getStatus());
-        if (!locationType.get().equals(location.getType())) {
-            BarrierlessCriteriaGroup barrierlessCriteriaGroup = locationType.get().getBarrierlessCriteriaGroup();
-            Set<BarrierlessCriteriaType> barrierlessCriteriaTypes = barrierlessCriteriaGroup.getBarrierlessCriteriaTypes();
+        oldLocation.setName(newLocation.getName());
+        oldLocation.setAddress(newLocation.getAddress());
+        oldLocation.setCreatedAt(newLocation.getCreatedAt());
+        oldLocation.setCreatedBy(newLocation.getCreatedBy());
+        oldLocation.setUpdatedAt(newLocation.getUpdatedAt());
+        oldLocation.setDescription(newLocation.getDescription());
+        oldLocation.setContacts(newLocation.getContacts());
+        oldLocation.setStatus(newLocation.getStatus());
+        if (!newLocationTypeOptional.get().equals(oldLocation.getType())) {
+            BarrierlessCriteriaGroup oldLocBarrierlessCriteriaGroup = oldLocation.getType().getBarrierlessCriteriaGroup();
+            Set<BarrierlessCriteriaType> oldLocbarrierlessCriteriaTypes = oldLocBarrierlessCriteriaGroup.getBarrierlessCriteriaTypes();
             Set<BarrierlessCriteria> restrictedBarrierlessCriterias = new HashSet<>();
-            for (BarrierlessCriteriaType type : barrierlessCriteriaTypes) {
-                restrictedBarrierlessCriterias.addAll(type.getBarrierlessCriterias());
+            for (BarrierlessCriteriaType criteriaType : oldLocbarrierlessCriteriaTypes) {
+                restrictedBarrierlessCriterias.addAll(criteriaType.getBarrierlessCriterias());
             }
-            Set<BarrierlessCriteriaCheck> locationBarrierlessCriteriaChecks = location.getBarrierlessCriteriaChecks();
+            Set<BarrierlessCriteriaCheck> locationBarrierlessCriteriaChecks = oldLocation.getBarrierlessCriteriaChecks();
             List<BarrierlessCriteriaCheck> toRemove = new ArrayList<>();
             for (BarrierlessCriteriaCheck locCheck : locationBarrierlessCriteriaChecks) {
                 for (BarrierlessCriteria restrictCriteria : restrictedBarrierlessCriterias) {

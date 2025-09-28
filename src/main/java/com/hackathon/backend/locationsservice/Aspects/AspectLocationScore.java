@@ -3,6 +3,7 @@ package com.hackathon.backend.locationsservice.Aspects;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationScoreChg;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationScoreChgRepository;
+import com.hackathon.backend.locationsservice.Result.Result;
 import lombok.AllArgsConstructor;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -38,23 +39,32 @@ public class AspectLocationScore {
 
     @AfterReturning(pointcut = "addMethod()", returning = "result")
     public void afterAdd(Object result) {
-        if (result instanceof BarrierlessCriteriaCheck added) {
-            UUID id = added.getLocation().getId();
 
-            LocationScoreChg locChg = new LocationScoreChg();
-            locChg.setLocationId(id);
-            locationScoreChgRepository.save(locChg);
-            log.info("LocationScoreChgRepository saved(after add()): " + locChg.getLocationId());
+        if (result instanceof Result<?, ?> res) {
+
+            Object entity = res.getEntity();
+
+            if (entity instanceof BarrierlessCriteriaCheck added) {
+
+                UUID id = added.getLocation().getId();
+
+                LocationScoreChg locChg = new LocationScoreChg();
+                locChg.setLocationId(id);
+                locationScoreChgRepository.save(locChg);
+
+                log.info("LocationScoreChgRepository saved(after add()): " + locChg.getLocationId());
+            }
         }
     }
 
     @After(value = "deleteByObject(criteria)", argNames = "criteria")
     public void afterDeleteByObject(BarrierlessCriteriaCheck criteria) {
-        UUID id = criteria.getLocation().getId();
 
+        UUID id = criteria.getLocation().getId();
         LocationScoreChg locChg = new LocationScoreChg();
         locChg.setLocationId(id);
         locationScoreChgRepository.save(locChg);
+
         log.info("LocationScoreChgRepository saved(after delete()): " + locChg.getLocationId());
 
     }

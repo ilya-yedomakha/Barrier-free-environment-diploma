@@ -90,11 +90,14 @@ public class BarrierlessCriteriaCheckService{
 
     public List<BarrierlessCriteriaCheckReadDTO> findAllBarrierCriteriaCheckByLocationId(UUID locationId) {
 
-        return barrierlessCriteriaCheckRepository.findAllByLocation_Id(locationId).stream().map(barrierlessCriteriaCheckMapper::toDto).toList();
+        return barrierlessCriteriaCheckRepository.findAllByLocation_Id(locationId).stream()
+                .map(barrierlessCriteriaCheckMapper::toDto).toList();
     }
 
-    public List<BarrierlessCriteriaCheck> findAllBarrierCriteriaCheckByUserId(UUID userId) {
-        return List.of();
+    public List<BarrierlessCriteriaCheckReadDTO> findAllBarrierCriteriaCheckByUserId(UUID userId) {
+
+        return barrierlessCriteriaCheckRepository.findAllByUser_Id(userId).stream()
+                .map(barrierlessCriteriaCheckMapper::toDto).toList();
     }
 
     public List<BarrierlessCriteriaCheck> findAllBarrierCriteriaCheckByLocationIdAndCriteria(UUID locationId,

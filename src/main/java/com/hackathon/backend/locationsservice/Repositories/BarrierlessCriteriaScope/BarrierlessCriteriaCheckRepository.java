@@ -20,6 +20,6 @@ public interface BarrierlessCriteriaCheckRepository
     List<BarrierlessCriteriaCheck> findAllByBarrierlessCriteria_Id(UUID barrierlessCriteriaId);
 
 
-
+    List<BarrierlessCriteriaCheck> findAllByUser_Id(UUID userId);
 }
 

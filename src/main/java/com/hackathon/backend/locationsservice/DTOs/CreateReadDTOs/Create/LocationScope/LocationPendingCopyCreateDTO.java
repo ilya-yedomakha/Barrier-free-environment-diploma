@@ -1,15 +1,16 @@
-package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
+package com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope;
 
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Base.BaseRegularCreateDTO;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
+import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
@@ -18,31 +19,13 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "Location_pending_copies")
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class LocationPendingCopy{
+public class LocationPendingCopyCreateDTO extends BaseRegularCreateDTO {
+    UUID locationId;
 
-    @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "location_id", referencedColumnName = "id", nullable = false)
-    private Location location;
-
-    @NotNull
-    @NotBlank
-    @Column(length = 255, nullable = false)
     private String name;
 
-    @NotNull
-    @NotBlank
-    @Column(length = 500, nullable = false)
     private String address;
 
     @Column(columnDefinition = "TEXT")
@@ -66,8 +49,8 @@ public class LocationPendingCopy{
     @Column(name = "status", nullable = false)
     private LocationStatusEnum status = LocationStatusEnum.pending;
 
-
     @NotNull
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
+
 }

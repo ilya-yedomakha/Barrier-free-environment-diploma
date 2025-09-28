@@ -45,6 +45,9 @@ public class Location extends NamedEntity {
     @OneToMany(mappedBy = "location")
     private Set<BarrierlessCriteriaCheck> barrierlessCriteriaChecks = new HashSet<>();
 
+    @OneToMany(mappedBy = "location",cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<LocationPendingCopy> pendingLocations = new HashSet<>();
+
     @NotNull
     @ManyToOne
     @JoinColumn(name = "location_type_id", referencedColumnName = "id", nullable = false)

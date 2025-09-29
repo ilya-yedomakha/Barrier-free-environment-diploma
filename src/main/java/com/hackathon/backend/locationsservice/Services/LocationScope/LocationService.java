@@ -20,6 +20,7 @@ import com.hackathon.backend.locationsservice.Domain.Verification;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationPendingCopyRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationScoreChgRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
@@ -33,6 +34,8 @@ import jakarta.transaction.Transactional;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -44,13 +47,18 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository;
     private final LocationPendingCopyMapper locationPendingCopyMapper;
     private final LocationPendingCopyRepository locationPendingCopyRepository;
+    private final LocationScoreChgRepository locationScoreChgRepository;
 
-    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository, LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository) {
+    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
+                    LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository,
+                    LocationScoreChgRepository locationScoreChgRepository) {
+
         super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
         this.barrierlessCriteriaCheckRepository = barrierlessCriteriaCheckRepository;
         this.locationPendingCopyMapper = locationPendingCopyMapper;
         this.locationPendingCopyRepository = locationPendingCopyRepository;
+        this.locationScoreChgRepository = locationScoreChgRepository;
     }
 
     @PersistenceContext
@@ -388,6 +396,60 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entityDTO = mapper.toDto(savedLocation);
 
         return res;
+
+    }
+
+    //@Async
+    @Scheduled(fixedDelay = 30 * 60 * 1000, initialDelay = 2 * 60 * 1000)
+    @Transactional
+    public void calculateBarrierlessScore(){
+
+        List<UUID> uis = locationScoreChgRepository.getLocationScoreChg_locationId();
+
+        if(uis.isEmpty()) {
+            return;
+        }
+
+        Location location;
+
+        for (UUID ui : uis) {
+
+            location = repository.findById(ui).get();
+            var types = location.getType().getBarrierlessCriteriaGroup().getBarrierlessCriteriaTypes();
+
+            long total = 0;
+            long barierlessCriteriaAllCount = 0;
+
+            for (BarrierlessCriteriaType type : types) {
+
+                Location finalLocation = location;
+
+                long barrierlessCriteriaTypeCount = type.getBarrierlessCriterias().stream()
+                        .map(barrierlessCriteria -> {
+                            int score = barrierlessCriteriaCheckRepository
+                                    .findAllByBarrierlessCriteria_IdAndLocation_Id(
+                                            barrierlessCriteria.getId(),
+                                            finalLocation.getId()
+                                    )
+                                    .stream()
+                                    .mapToInt(check -> check.isHasIssue() ? -1 : 1)
+                                    .sum();
+
+                            return score >= 0;
+
+                        })
+                        .filter(isBarrierless -> isBarrierless)
+                        .count();
+
+                total += type.getBarrierlessCriterias().size();
+                barierlessCriteriaAllCount += barrierlessCriteriaTypeCount;
+
+            }
+
+            int newScore = (int) Math.round(((double) barierlessCriteriaAllCount / total) * 100);
+            location.setOverallAccessibilityScore(newScore);
+            repository.save(location);
+        }
 
     }
 }

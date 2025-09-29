@@ -345,6 +345,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             }
         }
         oldLocation.setName(newLocation.getName());
+        oldLocation.setCoordinates(newLocation.getCoordinates());
         oldLocation.setAddress(newLocation.getAddress());
         oldLocation.setCreatedAt(newLocation.getCreatedAt());
         oldLocation.setCreatedBy(newLocation.getCreatedBy());

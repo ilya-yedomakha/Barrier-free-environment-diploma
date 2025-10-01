@@ -398,7 +398,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
     }
 
-    //@Async
+    @Async
     @Scheduled(fixedDelay = 30 * 60 * 1000, initialDelay = 2 * 60 * 1000)
     @Transactional
     public void calculateBarrierlessScore(){

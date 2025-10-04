@@ -1,6 +1,6 @@
 package com.hackathon.backend.locationsservice.Repositories.LocationScope;
 
-import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationPendingCopy;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

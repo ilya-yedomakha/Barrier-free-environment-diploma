@@ -1,6 +1,6 @@
-package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
+package com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional;
 
-import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;

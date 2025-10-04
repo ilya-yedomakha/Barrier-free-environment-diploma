@@ -16,6 +16,7 @@ import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
+import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
 import com.hackathon.backend.locationsservice.Domain.Verification;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationPendingCopyRepository;
@@ -210,6 +211,31 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 //        if (locations != null && !locations.isEmpty()) {
 //            return Result.failure(EntityError.sameName(type, newLocation.getDescription()));
 //        }
+
+        WorkingHours wh = newLocation.getWorkingHours();
+        if (wh != null) {
+            boolean invalidHours = Arrays.stream(WorkingHours.class.getDeclaredFields())
+                    .filter(f -> f.getType().equals(WorkingHours.DayHours.class))
+                    .map(f -> {
+                        try {
+                            f.setAccessible(true);
+                            return (WorkingHours.DayHours) f.get(wh);
+                        } catch (IllegalAccessException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .anyMatch(day -> {
+                        boolean hasOpen = day.getOpen() != null && !day.getOpen().isBlank();
+                        boolean hasClose = day.getClose() != null && !day.getClose().isBlank();
+                        return hasOpen ^ hasClose;
+                    });
+
+            if (invalidHours) {
+                return Result.failure(LocationError.invalidWorkingHours());
+            }
+        }
+
 
         Location savedLocation = repository.save(newLocation);
         Result<Location, LocationReadDTO> res = Result.success();

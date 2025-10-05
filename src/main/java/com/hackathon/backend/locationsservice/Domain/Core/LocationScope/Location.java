@@ -42,8 +42,7 @@ public class Location extends NamedEntity {
     private Point coordinates;
 
 
-    //, cascade = CascadeType.ALL, orphanRemoval = true TODO: maybe
-    @OneToMany(mappedBy = "location")
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BarrierlessCriteriaCheck> barrierlessCriteriaChecks = new HashSet<>();
 
     @OneToMany(mappedBy = "location",cascade = CascadeType.ALL, orphanRemoval = true)

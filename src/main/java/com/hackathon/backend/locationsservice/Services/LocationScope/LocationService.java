@@ -6,6 +6,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationS
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationPendingCopyMapper;
+import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
@@ -27,6 +28,7 @@ import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
+import com.hackathon.backend.locationsservice.Services.util.StringSimilarity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -428,11 +430,11 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     //@Async
     @Scheduled(fixedDelay = 30 * 60 * 1000, initialDelay = 2 * 60 * 1000)
     @Transactional
-    public void calculateBarrierlessScore(){
+    public void calculateBarrierlessScore() {
 
         List<UUID> uis = locationScoreChgRepository.getLocationScoreChg_locationId();
 
-        if(uis.isEmpty()) {
+        if (uis.isEmpty()) {
             return;
         }
 
@@ -477,5 +479,32 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             repository.save(location);
         }
 
+    }
+
+    public List<SimilarLocationDTO> findSimilar(LocationCreateDTO newLocDTO) {
+        Location newLoc = mapper.toEntity(newLocDTO);
+        List<Location> nearby = repository.findNearby(
+                newLoc.getCoordinates().getY(),
+                newLoc.getCoordinates().getX()
+        );
+
+        return nearby.stream()
+                .map(existing -> {
+                    double nameSim = StringSimilarity.likeness(existing.getName(), newLoc.getName());
+                    double addrSim = StringSimilarity.likeness(existing.getAddress(), newLoc.getAddress());
+                    double likeness = (nameSim + addrSim) / 2.0 * 100;
+
+                    return new SimilarLocationDTO(mapper.toDto(existing), likeness);
+                })
+                .filter(dto -> dto.getLikeness() >= 80)
+                .sorted((a, b) -> {
+                    int typeCompare = Boolean.compare(
+                            b.getLocation().getType().equals(newLoc.getType()),
+                            a.getLocation().getType().equals(newLoc.getType())
+                    );
+                    if (typeCompare != 0) return typeCompare;
+                    return Double.compare(b.getLikeness(), a.getLikeness());
+                })
+                .toList();
     }
 }

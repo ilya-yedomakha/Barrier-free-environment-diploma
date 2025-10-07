@@ -1,9 +1,15 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationTypeCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationTypeMapper;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaGroupRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
@@ -14,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class LocationTypeService extends GeneralService<LocationTypeMapper, LocationTypeReadDTO, LocationTypeCreateDTO, LocationType, LocationTypeRepository> {
@@ -52,5 +59,50 @@ public class LocationTypeService extends GeneralService<LocationTypeMapper, Loca
 
         return res;
 
+    }
+
+    public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID id) {
+        Optional<LocationType> locationTypeOptional = repository.findById(id);
+
+        if (locationTypeOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(type, id));
+        }
+        LocationType locationType = locationTypeOptional.get();
+
+        BarrierlessCriteriaGroup group = locationType.getBarrierlessCriteriaGroup();
+
+        List<BarrierlessCriteriaTypeDTO> typeDTOs = group.getBarrierlessCriteriaTypes().stream()
+                .map(t -> new BarrierlessCriteriaTypeDTO(
+                        t.getId(),
+                        t.getName(),
+                        t.getDescription(),
+                        t.getBarrierlessCriterias().stream()
+                                .map(c -> new BarrierlessCriteriaDTO(
+                                        c.getId(),
+                                        c.getName(),
+                                        c.getDescription(),
+                                        c.getBarrierlessCriteriaRank().name()
+                                ))
+                                .toList()
+                ))
+                .toList();
+
+        LocationTypeWithGroupDTO locationTypeWithGroupDTO = new LocationTypeWithGroupDTO(
+                locationType.getId(),
+                locationType.getName(),
+                locationType.getDescription(),
+                new BarrierlessCriteriaGroupDTO(
+                        group.getId(),
+                        group.getName(),
+                        group.getDescription(),
+                        typeDTOs
+                )
+        );
+
+        Result<LocationType, LocationTypeWithGroupDTO> res = Result.success();
+        res.entity = locationType;
+        res.entityDTO = locationTypeWithGroupDTO;
+
+        return res;
     }
 }

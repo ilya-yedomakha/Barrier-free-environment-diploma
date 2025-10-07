@@ -4,6 +4,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationTypeCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Result.Result;
@@ -49,6 +50,16 @@ public class LocationTypeController {
     @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> add(@RequestBody LocationTypeCreateDTO locationTypeCreateDTO) {
         Result<LocationType, LocationTypeReadDTO> Result = locationTypeService.add(locationTypeCreateDTO);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/{id}/criteria-tree")
+    ResponseEntity<?> getCriteriaTree(@PathVariable UUID id) {
+        Result<LocationType, LocationTypeWithGroupDTO> Result = locationTypeService.getCriteriaTree(id);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
         } else {

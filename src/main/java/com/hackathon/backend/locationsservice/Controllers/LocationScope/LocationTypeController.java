@@ -56,14 +56,4 @@ public class LocationTypeController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
         }
     }
-
-    @GetMapping("/{id}/criteria-tree")
-    ResponseEntity<?> getCriteriaTree(@PathVariable UUID id) {
-        Result<LocationType, LocationTypeWithGroupDTO> Result = locationTypeService.getCriteriaTree(id);
-        if (Result.isSuccess()) {
-            return ResponseEntity.ok(Result.getEntityDTO());
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
-        }
-    }
 }

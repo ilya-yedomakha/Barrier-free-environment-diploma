@@ -4,6 +4,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationTypeMapper;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaCheckDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
@@ -34,7 +35,7 @@ public class LocationTypeService extends GeneralService<LocationTypeMapper, Loca
     public Result<LocationType, LocationTypeReadDTO> add(LocationTypeCreateDTO locationTypeCreateDTO) {
         Optional<BarrierlessCriteriaGroup> barrierlessCriteriaGroup = barrierlessCriteriaGroupRepository.findById(locationTypeCreateDTO.getBarrierlessCriteriaGroupId());
         if (barrierlessCriteriaGroup.isEmpty()) {
-            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class,locationTypeCreateDTO.getBarrierlessCriteriaGroupId()));
+            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class, locationTypeCreateDTO.getBarrierlessCriteriaGroupId()));
         }
         LocationType newLocationType = mapper.toEntity(locationTypeCreateDTO);
         if (newLocationType == null) {
@@ -42,9 +43,10 @@ public class LocationTypeService extends GeneralService<LocationTypeMapper, Loca
         }
 
         List<LocationType> locationTypes = repository.findAll();
-        if(checkNameDuplicates(locationTypes,newLocationType.getName())){
+        if (checkNameDuplicates(locationTypes, newLocationType.getName())) {
             return Result.failure(EntityError.sameName(type, newLocationType.getName()));
-        };
+        }
+        ;
 
         //TODO: There can be same descriptions for different locations?
 //        List<LocationType> locationTypeDescriptionDuplicates = repository.findAllByDescription(newLocationType.getDescription());
@@ -59,50 +61,5 @@ public class LocationTypeService extends GeneralService<LocationTypeMapper, Loca
 
         return res;
 
-    }
-
-    public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID id) {
-        Optional<LocationType> locationTypeOptional = repository.findById(id);
-
-        if (locationTypeOptional.isEmpty()) {
-            return Result.failure(EntityError.notFound(type, id));
-        }
-        LocationType locationType = locationTypeOptional.get();
-
-        BarrierlessCriteriaGroup group = locationType.getBarrierlessCriteriaGroup();
-
-        List<BarrierlessCriteriaTypeDTO> typeDTOs = group.getBarrierlessCriteriaTypes().stream()
-                .map(t -> new BarrierlessCriteriaTypeDTO(
-                        t.getId(),
-                        t.getName(),
-                        t.getDescription(),
-                        t.getBarrierlessCriterias().stream()
-                                .map(c -> new BarrierlessCriteriaDTO(
-                                        c.getId(),
-                                        c.getName(),
-                                        c.getDescription(),
-                                        c.getBarrierlessCriteriaRank().name()
-                                ))
-                                .toList()
-                ))
-                .toList();
-
-        LocationTypeWithGroupDTO locationTypeWithGroupDTO = new LocationTypeWithGroupDTO(
-                locationType.getId(),
-                locationType.getName(),
-                locationType.getDescription(),
-                new BarrierlessCriteriaGroupDTO(
-                        group.getId(),
-                        group.getName(),
-                        group.getDescription(),
-                        typeDTOs
-                )
-        );
-
-        Result<LocationType, LocationTypeWithGroupDTO> res = Result.success();
-        res.entity = locationType;
-        res.entityDTO = locationTypeWithGroupDTO;
-
-        return res;
     }
 }

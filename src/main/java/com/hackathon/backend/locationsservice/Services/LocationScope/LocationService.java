@@ -6,6 +6,11 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationS
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationPendingCopyMapper;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaCheckDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
 import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
@@ -507,4 +512,62 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                 })
                 .toList();
     }
+
+    public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Location location = locationOptional.get();
+        LocationType locationType = location.getType();
+
+        BarrierlessCriteriaGroup group = locationType.getBarrierlessCriteriaGroup();
+
+        List<BarrierlessCriteriaTypeDTO> typeDTOs = group.getBarrierlessCriteriaTypes().stream()
+                .map(t -> new BarrierlessCriteriaTypeDTO(
+                        t.getId(),
+                        t.getName(),
+                        t.getDescription(),
+                        t.getBarrierlessCriterias().stream()
+                                .map(c -> new BarrierlessCriteriaDTO(
+                                        c.getId(),
+                                        c.getName(),
+                                        c.getDescription(),
+                                        c.getBarrierlessCriteriaRank().name(),
+
+                                        c.getBarrierlessCriteriaChecks().stream()
+                                                .filter(ch -> ch.getLocation() != null && ch.getLocation().getId().equals(locationId))
+                                                .map(ch -> new BarrierlessCriteriaCheckDTO(
+                                                        ch.getLocation().getId(),
+                                                        ch.getBarrierlessCriteria().getId(),
+                                                        ch.getUser().getId(),
+                                                        ch.getComment(),
+                                                        ch.isHasIssue()
+                                                ))
+                                                .toList()
+                                ))
+                                .toList()
+                ))
+                .toList();
+
+        LocationTypeWithGroupDTO locationTypeWithGroupDTO = new LocationTypeWithGroupDTO(
+                locationType.getId(),
+                locationType.getName(),
+                locationType.getDescription(),
+                new BarrierlessCriteriaGroupDTO(
+                        group.getId(),
+                        group.getName(),
+                        group.getDescription(),
+                        typeDTOs
+                )
+        );
+
+        Result<LocationType, LocationTypeWithGroupDTO> res = Result.success();
+        res.entity = locationType;
+        res.entityDTO = locationTypeWithGroupDTO;
+
+        return res;
+    }
+
 }

@@ -49,6 +49,18 @@ public class BarrierlessCriteriaCheckController {
         }
     }
 
+    @PostMapping("/all")
+    ResponseEntity<?> saveAll(@RequestBody List<BarrierlessCriteriaCheckCreateDTO> checkList) {
+
+        Result<BarrierlessCriteriaCheck, BarrierlessCriteriaCheckReadDTO> Result = barrierlessCriteriaCheckService.addAll(checkList);
+
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
 //    @PutMapping
 //    ResponseEntity<BarrierlessCriteriaCheck> updateBarrierlessCriteriaCheck(@RequestBody BarrierlessCriteriaCheck check) {
 //        return ResponseEntity.ok(barrierlessCriteriaCheckService.save(check));

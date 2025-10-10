@@ -163,12 +163,16 @@ public class LocationController {
     }
 
     @GetMapping("/{id}/criteria-tree")
-    ResponseEntity<?> getCriteriaTree(@PathVariable UUID id) {
-        Result<LocationType, LocationTypeWithGroupDTO> Result = locationService.getCriteriaTree(id);
-        if (Result.isSuccess()) {
-            return ResponseEntity.ok(Result.getEntityDTO());
+    public ResponseEntity<?> getCriteriaTree(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID userId // 👈 ось тут
+    ) {
+        Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTree(id, userId);
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
         }
     }
+
 }

@@ -513,7 +513,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                 .toList();
     }
 
-    public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId) {
+    public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId, UUID userId) {
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
@@ -521,7 +521,6 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
         Location location = locationOptional.get();
         LocationType locationType = location.getType();
-
         BarrierlessCriteriaGroup group = locationType.getBarrierlessCriteriaGroup();
 
         List<BarrierlessCriteriaTypeDTO> typeDTOs = group.getBarrierlessCriteriaTypes().stream()
@@ -536,8 +535,13 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                                         c.getDescription(),
                                         c.getBarrierlessCriteriaRank().name(),
 
+                                        // 🔥 Фільтрація чеків по locationId і userId
                                         c.getBarrierlessCriteriaChecks().stream()
-                                                .filter(ch -> ch.getLocation() != null && ch.getLocation().getId().equals(locationId))
+                                                .filter(ch ->
+                                                        ch.getLocation() != null &&
+                                                                ch.getLocation().getId().equals(locationId) &&
+                                                                (userId == null || (ch.getUser() != null && ch.getUser().getId().equals(userId)))
+                                                )
                                                 .map(ch -> new BarrierlessCriteriaCheckDTO(
                                                         ch.getLocation().getId(),
                                                         ch.getBarrierlessCriteria().getId(),
@@ -566,8 +570,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Result<LocationType, LocationTypeWithGroupDTO> res = Result.success();
         res.entity = locationType;
         res.entityDTO = locationTypeWithGroupDTO;
-
         return res;
     }
+
 
 }

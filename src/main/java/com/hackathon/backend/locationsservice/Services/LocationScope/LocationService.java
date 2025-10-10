@@ -550,11 +550,28 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                 .toList();
     }
 
-    public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId, UUID userId) {
+    public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId) {
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
         }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
 
         Location location = locationOptional.get();
         LocationType locationType = location.getType();
@@ -577,7 +594,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                                                 .filter(ch ->
                                                         ch.getLocation() != null &&
                                                                 ch.getLocation().getId().equals(locationId) &&
-                                                                (userId == null || (ch.getUser() != null && ch.getUser().getId().equals(userId)))
+                                                                (currentUserId == null || (ch.getUser() != null && ch.getUser().getId().equals(currentUserId)))
                                                 )
                                                 .map(ch -> new BarrierlessCriteriaCheckDTO(
                                                         ch.getLocation().getId(),

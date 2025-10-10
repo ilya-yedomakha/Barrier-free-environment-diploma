@@ -50,6 +50,7 @@ public class BarrierlessCriteriaCheckService{
         if (userOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(User.class,barrierlessCriteriaCheckCreateDTO.getUserId()));
         }
+//        barrierlessCriteriaCheckCreateDTO.setCreatedBy();
         BarrierlessCriteriaCheck newBarrierlessCriteriaCheck = barrierlessCriteriaCheckMapper.toEntity(barrierlessCriteriaCheckCreateDTO);
         if (newBarrierlessCriteriaCheck == null) {
             return Result.failure(EntityError.nullReference(BarrierlessCriteriaCheck.class));

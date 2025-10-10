@@ -26,8 +26,20 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/by-name/{username}")
-    public ResponseEntity<UserDTO> getByUsername(@PathVariable String username) {
+    @GetMapping("/me/")
+    public ResponseEntity<UserDTO> getByUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+        }
+
+        if (username == null) {
+            return ResponseEntity.notFound().build();
+        }
+
         UserDTO user = userService.loadWholeUserByUsername(username);
         if (user == null) {
             return ResponseEntity.notFound().build();

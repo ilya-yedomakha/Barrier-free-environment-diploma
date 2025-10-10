@@ -168,7 +168,7 @@ public class LocationController {
             @PathVariable UUID id,
             @RequestParam(required = false) UUID userId // 👈 ось тут
     ) {
-        Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTree(id, userId);
+        Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTree(id);
         if (result.isSuccess()) {
             return ResponseEntity.ok(result.getEntityDTO());
         } else {

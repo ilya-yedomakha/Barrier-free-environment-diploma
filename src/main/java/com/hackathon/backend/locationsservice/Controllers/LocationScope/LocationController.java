@@ -14,6 +14,7 @@ import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -32,9 +33,9 @@ import java.util.UUID;
 public class LocationController {
 
     private final LocationService locationService;
-    private final LocationRepository locationRepository;
 
     @GetMapping()
+    @PermitAll
     public ResponseEntity<?> getLocations(
             @RequestParam(name = "lat", required = false) Double lat,
             @RequestParam(name = "lng", required = false) Double lng,

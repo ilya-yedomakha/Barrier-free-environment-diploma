@@ -32,6 +32,10 @@ import com.hackathon.backend.locationsservice.Repositories.LocationScope.Locatio
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
+import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
+import com.hackathon.backend.locationsservice.Security.Domain.User;
+import com.hackathon.backend.locationsservice.Security.Services.UserService;
+import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
 import com.hackathon.backend.locationsservice.Services.util.StringSimilarity;
 import jakarta.persistence.EntityManager;
@@ -44,6 +48,9 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -56,10 +63,11 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final LocationPendingCopyMapper locationPendingCopyMapper;
     private final LocationPendingCopyRepository locationPendingCopyRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
+    private final UserServiceImpl userService;
 
     LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
                     LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository,
-                    LocationScoreChgRepository locationScoreChgRepository) {
+                    LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService) {
 
         super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
@@ -67,6 +75,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         this.locationPendingCopyMapper = locationPendingCopyMapper;
         this.locationPendingCopyRepository = locationPendingCopyRepository;
         this.locationScoreChgRepository = locationScoreChgRepository;
+        this.userService = userService;
     }
 
     @PersistenceContext
@@ -80,6 +89,34 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Root<Location> locationRoot = cq.from(Location.class);
 
         List<Predicate> predicates = new ArrayList<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        boolean isAdmin = false;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+
+        if (!isAdmin) {
+            Predicate published = cb.equal(locationRoot.get("status"), LocationStatusEnum.published);
+
+            if (isAuthenticated && username != null) {
+                UserDTO user = userService.loadWholeUserByUsername(username);
+                Predicate ownPending = cb.and(
+                        cb.equal(locationRoot.get("status"), LocationStatusEnum.pending),
+                        cb.equal(locationRoot.get("createdBy"), user.id())
+                );
+                predicates.add(cb.or(published, ownPending));
+            } else {
+                // Неавторизований — тільки опубліковані
+                predicates.add(published);
+            }
+        }
 
         if (params.containsKey("status")) {
             predicates.add(cb.equal(locationRoot.get("status"), params.get("status")));

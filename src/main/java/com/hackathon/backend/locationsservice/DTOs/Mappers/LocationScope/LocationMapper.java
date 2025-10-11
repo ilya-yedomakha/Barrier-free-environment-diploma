@@ -25,7 +25,7 @@ public class LocationMapper implements BaseMapper<Location, LocationReadDTO, Loc
     public Location toEntity(LocationCreateDTO dto) {
         Point coordinates = null;
         if (dto.coordinates != null) {
-            Coordinate coord = new Coordinate(dto.coordinates.getLat(), dto.coordinates.getLng());
+            Coordinate coord = new Coordinate(dto.coordinates.getLng(), dto.coordinates.getLat());
             coordinates = geometryFactory.createPoint(coord);
         }
 

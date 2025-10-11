@@ -1,6 +1,7 @@
 package com.hackathon.backend.locationsservice.Security.Services;
 
 import com.hackathon.backend.locationsservice.Result.Result;
+import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
 import com.hackathon.backend.locationsservice.Security.Repositories.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +24,20 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User with name: " + username + " was not found"));
     }
+
+    public UserDTO loadWholeUserByUsername(String username) {
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User with name: " + username + " was not found"));
+
+        return new UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRole().name() // або просто getRole() якщо це String
+        );
+    }
+
 
     @Override
     public boolean existsByUsername(String username) {

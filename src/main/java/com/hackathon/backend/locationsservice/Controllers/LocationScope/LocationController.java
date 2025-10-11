@@ -4,13 +4,17 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
-import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationPendingCopy;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,9 +33,9 @@ import java.util.UUID;
 public class LocationController {
 
     private final LocationService locationService;
-    private final LocationRepository locationRepository;
 
     @GetMapping()
+    @PermitAll
     public ResponseEntity<?> getLocations(
             @RequestParam(name = "lat", required = false) Double lat,
             @RequestParam(name = "lng", required = false) Double lng,
@@ -124,6 +129,22 @@ public class LocationController {
         }
     }
 
+    @PostMapping("/check-duplicates")
+    public ResponseEntity<?> checkDuplicates(@RequestBody LocationCreateDTO newLocation) {
+        List<SimilarLocationDTO> similar = locationService.findSimilar(newLocation);
+
+        if (!similar.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of(
+                            "message", "Found similar locations nearby",
+                            "similar", similar
+                    ));
+        }
+
+        return ResponseEntity.ok(Map.of("message", "No duplicates found"));
+    }
+
+
     @PostMapping
     ResponseEntity<?> add(@RequestBody LocationCreateDTO locationCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.add(locationCreateDTO);
@@ -141,4 +162,18 @@ public class LocationController {
         response.put("message", "LocationController is working correctly");
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{id}/criteria-tree")
+    public ResponseEntity<?> getCriteriaTree(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID userId // 👈 ось тут
+    ) {
+        Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTree(id);
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
 }

@@ -6,16 +6,23 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationS
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationPendingCopyMapper;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaCheckDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
-import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Pagination;
+import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
 import com.hackathon.backend.locationsservice.Domain.Verification;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationPendingCopyRepository;
@@ -25,7 +32,12 @@ import com.hackathon.backend.locationsservice.Repositories.LocationScope.Locatio
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
+import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
+import com.hackathon.backend.locationsservice.Security.Domain.User;
+import com.hackathon.backend.locationsservice.Security.Services.UserService;
+import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
+import com.hackathon.backend.locationsservice.Services.util.StringSimilarity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -36,6 +48,9 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -48,10 +63,11 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final LocationPendingCopyMapper locationPendingCopyMapper;
     private final LocationPendingCopyRepository locationPendingCopyRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
+    private final UserServiceImpl userService;
 
     LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
                     LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository,
-                    LocationScoreChgRepository locationScoreChgRepository) {
+                    LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService) {
 
         super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
@@ -59,6 +75,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         this.locationPendingCopyMapper = locationPendingCopyMapper;
         this.locationPendingCopyRepository = locationPendingCopyRepository;
         this.locationScoreChgRepository = locationScoreChgRepository;
+        this.userService = userService;
     }
 
     @PersistenceContext
@@ -72,6 +89,34 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Root<Location> locationRoot = cq.from(Location.class);
 
         List<Predicate> predicates = new ArrayList<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        boolean isAdmin = false;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+
+        if (!isAdmin) {
+            Predicate published = cb.equal(locationRoot.get("status"), LocationStatusEnum.published);
+
+            if (isAuthenticated && username != null) {
+                UserDTO user = userService.loadWholeUserByUsername(username);
+                Predicate ownPending = cb.and(
+                        cb.equal(locationRoot.get("status"), LocationStatusEnum.pending),
+                        cb.equal(locationRoot.get("createdBy"), user.id())
+                );
+                predicates.add(cb.or(published, ownPending));
+            } else {
+                // Неавторизований — тільки опубліковані
+                predicates.add(published);
+            }
+        }
 
         if (params.containsKey("status")) {
             predicates.add(cb.equal(locationRoot.get("status"), params.get("status")));
@@ -210,6 +255,31 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 //        if (locations != null && !locations.isEmpty()) {
 //            return Result.failure(EntityError.sameName(type, newLocation.getDescription()));
 //        }
+
+        WorkingHours wh = newLocation.getWorkingHours();
+        if (wh != null) {
+            boolean invalidHours = Arrays.stream(WorkingHours.class.getDeclaredFields())
+                    .filter(f -> f.getType().equals(WorkingHours.DayHours.class))
+                    .map(f -> {
+                        try {
+                            f.setAccessible(true);
+                            return (WorkingHours.DayHours) f.get(wh);
+                        } catch (IllegalAccessException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .anyMatch(day -> {
+                        boolean hasOpen = day.getOpen() != null && !day.getOpen().isBlank();
+                        boolean hasClose = day.getClose() != null && !day.getClose().isBlank();
+                        return hasOpen ^ hasClose;
+                    });
+
+            if (invalidHours) {
+                return Result.failure(LocationError.invalidWorkingHours());
+            }
+        }
+
 
         Location savedLocation = repository.save(newLocation);
         Result<Location, LocationReadDTO> res = Result.success();
@@ -353,6 +423,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             }
         }
         oldLocation.setName(newLocation.getName());
+        oldLocation.setCoordinates(newLocation.getCoordinates());
         oldLocation.setAddress(newLocation.getAddress());
         oldLocation.setCreatedAt(newLocation.getCreatedAt());
         oldLocation.setCreatedBy(newLocation.getCreatedBy());
@@ -401,11 +472,11 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     @Async
     @Scheduled(fixedDelay = 30 * 60 * 1000, initialDelay = 2 * 60 * 1000)
     @Transactional
-    public void calculateBarrierlessScore(){
+    public void calculateBarrierlessScore() {
 
         List<UUID> uis = locationScoreChgRepository.getLocationScoreChg_locationId();
 
-        if(uis.isEmpty()) {
+        if (uis.isEmpty()) {
             return;
         }
 
@@ -451,4 +522,110 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         }
 
     }
+
+    public List<SimilarLocationDTO> findSimilar(LocationCreateDTO newLocDTO) {
+        Location newLoc = mapper.toEntity(newLocDTO);
+        List<Location> nearby = repository.findNearby(
+                newLoc.getCoordinates().getY(),
+                newLoc.getCoordinates().getX()
+        );
+
+        return nearby.stream()
+                .map(existing -> {
+                    double nameSim = StringSimilarity.likeness(existing.getName(), newLoc.getName());
+                    double addrSim = StringSimilarity.likeness(existing.getAddress(), newLoc.getAddress());
+                    double likeness = (nameSim + addrSim) / 2.0 * 100;
+
+                    return new SimilarLocationDTO(mapper.toDto(existing), likeness);
+                })
+                .filter(dto -> dto.getLikeness() >= 80)
+                .sorted((a, b) -> {
+                    int typeCompare = Boolean.compare(
+                            b.getLocation().getType().equals(newLoc.getType()),
+                            a.getLocation().getType().equals(newLoc.getType())
+                    );
+                    if (typeCompare != 0) return typeCompare;
+                    return Double.compare(b.getLikeness(), a.getLikeness());
+                })
+                .toList();
+    }
+
+    public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
+
+        Location location = locationOptional.get();
+        LocationType locationType = location.getType();
+        BarrierlessCriteriaGroup group = locationType.getBarrierlessCriteriaGroup();
+
+        List<BarrierlessCriteriaTypeDTO> typeDTOs = group.getBarrierlessCriteriaTypes().stream()
+                .map(t -> new BarrierlessCriteriaTypeDTO(
+                        t.getId(),
+                        t.getName(),
+                        t.getDescription(),
+                        t.getBarrierlessCriterias().stream()
+                                .map(c -> new BarrierlessCriteriaDTO(
+                                        c.getId(),
+                                        c.getName(),
+                                        c.getDescription(),
+                                        c.getBarrierlessCriteriaRank().name(),
+
+                                        // 🔥 Фільтрація чеків по locationId і userId
+                                        c.getBarrierlessCriteriaChecks().stream()
+                                                .filter(ch ->
+                                                        ch.getLocation() != null &&
+                                                                ch.getLocation().getId().equals(locationId) &&
+                                                                (currentUserId == null || (ch.getUser() != null && ch.getUser().getId().equals(currentUserId)))
+                                                )
+                                                .map(ch -> new BarrierlessCriteriaCheckDTO(
+                                                        ch.getLocation().getId(),
+                                                        ch.getBarrierlessCriteria().getId(),
+                                                        ch.getUser().getId(),
+                                                        ch.getComment(),
+                                                        ch.isHasIssue()
+                                                ))
+                                                .toList()
+                                ))
+                                .toList()
+                ))
+                .toList();
+
+        LocationTypeWithGroupDTO locationTypeWithGroupDTO = new LocationTypeWithGroupDTO(
+                locationType.getId(),
+                locationType.getName(),
+                locationType.getDescription(),
+                new BarrierlessCriteriaGroupDTO(
+                        group.getId(),
+                        group.getName(),
+                        group.getDescription(),
+                        typeDTOs
+                )
+        );
+
+        Result<LocationType, LocationTypeWithGroupDTO> res = Result.success();
+        res.entity = locationType;
+        res.entityDTO = locationTypeWithGroupDTO;
+        return res;
+    }
+
+
 }

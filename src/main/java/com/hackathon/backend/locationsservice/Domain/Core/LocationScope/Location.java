@@ -2,6 +2,7 @@ package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.Base.NamedEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
@@ -41,8 +42,7 @@ public class Location extends NamedEntity {
     private Point coordinates;
 
 
-    //, cascade = CascadeType.ALL, orphanRemoval = true TODO: maybe
-    @OneToMany(mappedBy = "location")
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BarrierlessCriteriaCheck> barrierlessCriteriaChecks = new HashSet<>();
 
     @OneToMany(mappedBy = "location",cascade = CascadeType.ALL, orphanRemoval = true)

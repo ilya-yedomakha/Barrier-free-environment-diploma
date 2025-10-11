@@ -128,8 +128,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         }
 
         if (params.containsKey("query")) {
-            String query = ((String) params.get("query")).toLowerCase();
-            String pattern = "%" + query + "%";
+            String queryText = ((String) params.get("query")).toLowerCase();
+            String pattern = "%" + queryText + "%";
             predicates.add(
                     cb.or(
                             cb.like(cb.lower(locationRoot.get("name")), pattern),
@@ -137,29 +137,6 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                     )
             );
         }
-
-//TODO:  CHANGE TO FIND BY MIN OVERALL ACCESSIBILITY SCORE
-
-//        if (params.containsKey("minScore")) {
-//            Integer minScore = (Integer) params.get("minScore");
-//
-//            Subquery<UUID> subquery = cq.subquery(UUID.class);
-//            Root<Feature> featureRoot = subquery.from(Feature.class);
-//            subquery.select(featureRoot.get("locationId"))
-//                    .where(cb.greaterThanOrEqualTo(featureRoot.get("qualityRating"), minScore));
-//
-//            predicates.add(locationRoot.get("id").in(subquery));
-//        }
-//
-//        if (params.containsKey("features")) {
-//            String[] features = ((String) params.get("features")).split(",");
-//            Subquery<UUID> featureSub = cq.subquery(UUID.class);
-//            Root<Feature> featureRoot = featureSub.from(Feature.class);
-//            featureSub.select(featureRoot.get("locationId"))
-//                    .where(featureRoot.get("type").in(Arrays.asList(features)));
-//
-//            predicates.add(locationRoot.get("id").in(featureSub));
-//        }
 
         if (params.containsKey("verified") && Boolean.TRUE.equals(params.get("verified"))) {
             Subquery<UUID> verificationSub = cq.subquery(UUID.class);
@@ -189,14 +166,16 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
         TypedQuery<Location> query = entityManager.createQuery(cq);
 
-        Long countLocations = getLocationsCount();
+        long countLocations = getLocationsCount();
 
-        int limit = 20;
         int page = 1;
+        Integer limit = null; // необмежений за замовчуванням
 
         if (params.get("limit") != null) {
             int paramLimit = ((Number) params.get("limit")).intValue();
-            limit = paramLimit > 0 ? paramLimit : 20;
+            if (paramLimit > 0) {
+                limit = paramLimit;
+            }
         }
 
         if (params.get("page") != null) {
@@ -204,22 +183,27 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             page = paramPage > 0 ? paramPage : 1;
         }
 
+        // Якщо ліміт заданий — застосовуємо пагінацію
+        if (limit != null) {
+            int firstResult = (page - 1) * limit;
+            query.setFirstResult(firstResult);
+            query.setMaxResults(limit);
+        }
 
-        int firstResult = (page - 1) * limit;
-
-        query.setFirstResult(firstResult);
-        query.setMaxResults(limit);
-
-
-        Pagination pagination;
-        pagination = new Pagination(page, limit, countLocations, countLocations / limit);
+        Pagination pagination = new Pagination(
+                page,
+                limit != null ? limit : (int) countLocations,
+                countLocations,
+                limit != null && limit > 0 ? (countLocations / limit) : 1
+        );
 
         List<Location> entities = query.getResultList();
         Result<Location, LocationListViewDTO> res = Result.success();
-        res.setEntities(query.getResultList());
+        res.setEntities(entities);
         res.entityDTO = new LocationListViewDTO(entities.stream().map(mapper::toDto).toList(), pagination);
         return res;
     }
+
 
 
     public Result<Location, LocationReadDTO> add(LocationCreateDTO locationCreateDTO) {

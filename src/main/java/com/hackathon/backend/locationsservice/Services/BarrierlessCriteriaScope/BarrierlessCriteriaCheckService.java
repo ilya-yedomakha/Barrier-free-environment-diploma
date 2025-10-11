@@ -12,6 +12,7 @@ import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationScoreChgRepository;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.CheckError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.Result;
@@ -30,6 +31,7 @@ public class BarrierlessCriteriaCheckService{
     private final BarrierlessCriteriaRepository barrierlessCriteriaRepository;
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
+    private final LocationScoreChgRepository locationScoreChgRepository;
     private final BarrierlessCriteriaCheckMapper barrierlessCriteriaCheckMapper;
 
 

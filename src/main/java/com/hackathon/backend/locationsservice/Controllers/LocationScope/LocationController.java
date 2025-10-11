@@ -129,6 +129,13 @@ public class LocationController {
         }
     }
 
+    @PostMapping("/calculate/barrierless-score")
+
+    ResponseEntity<?> calculateBarrierlessScore() {
+        locationService.calculateBarrierlessScore();
+        return ResponseEntity.ok("пораховано");
+    }
+
     @PostMapping("/check-duplicates")
     public ResponseEntity<?> checkDuplicates(@RequestBody LocationCreateDTO newLocation) {
         List<SimilarLocationDTO> similar = locationService.findSimilar(newLocation);

@@ -39,6 +39,10 @@ public class LocationCreateDTO extends BaseRegularCreateDTO {
     @NotNull
     public UUID createdBy;
 
+    public UUID updatedBy;
+
+    public UUID lastVerifiedBy;
+
     public UUID organizationId;
 
     public LocationStatusEnum status;
@@ -48,10 +52,9 @@ public class LocationCreateDTO extends BaseRegularCreateDTO {
     @NotNull
     public LocalDateTime createdAt = LocalDateTime.now();
 
-    @NotNull
-    public LocalDateTime updatedAt = LocalDateTime.now();
+    public LocalDateTime updatedAt;
 
-    @NotNull
+
     public LocalDateTime lastVerifiedAt;
 
     public String rejectionReason;

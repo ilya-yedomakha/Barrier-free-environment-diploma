@@ -7,6 +7,7 @@ import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,4 +44,6 @@ public class LocationPendingCopyReadDTO {
     private LocationStatusEnum status;
 
     private LocalDateTime updatedAt;
+
+    private UUID updatedBy;
 }

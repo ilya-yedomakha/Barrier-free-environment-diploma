@@ -130,7 +130,6 @@ public class LocationController {
     }
 
     @PostMapping("/calculate/barrierless-score")
-
     ResponseEntity<?> calculateBarrierlessScore() {
         locationService.calculateBarrierlessScore();
         return ResponseEntity.ok("пораховано");
@@ -157,6 +156,16 @@ public class LocationController {
         Result<Location, LocationReadDTO> Result = locationService.add(locationCreateDTO);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/me/pending-locations/")
+    ResponseEntity<?> getUserPendingLocations() {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocations();
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
         }

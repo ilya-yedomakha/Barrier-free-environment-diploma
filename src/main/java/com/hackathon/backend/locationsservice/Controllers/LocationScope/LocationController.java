@@ -138,7 +138,7 @@ public class LocationController {
 
     @PostMapping("/check-duplicates")
     public ResponseEntity<?> checkDuplicates(@RequestBody LocationCreateDTO newLocation) {
-        List<SimilarLocationDTO> similar = locationService.findSimilar(newLocation);
+        List<LocationReadDTO> similar = locationService.findSimilar(newLocation);
 
         if (!similar.isEmpty()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -150,6 +150,7 @@ public class LocationController {
 
         return ResponseEntity.ok(Map.of("message", "No duplicates found"));
     }
+
 
 
     @PostMapping

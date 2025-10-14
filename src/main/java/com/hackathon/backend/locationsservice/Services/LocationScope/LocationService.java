@@ -558,32 +558,19 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
     }
 
-    public List<SimilarLocationDTO> findSimilar(LocationCreateDTO newLocDTO) {
+    public List<LocationReadDTO> findSimilar(LocationCreateDTO newLocDTO) {
         Location newLoc = mapper.toEntity(newLocDTO);
-        List<Location> nearby = repository.findNearby(
-                newLoc.getCoordinates().getY(),
-                newLoc.getCoordinates().getX()
+
+        List<Location> nearbySimilar = repository.findNearbySimilarLocations(
+                newLoc.getCoordinates().getY(),  // lat
+                newLoc.getCoordinates().getX(),  // lng
+                newLoc.getName(),
+                newLoc.getAddress()
         );
 
-        return nearby.stream()
-                .map(existing -> {
-                    double nameSim = StringSimilarity.likeness(existing.getName(), newLoc.getName());
-                    double addrSim = StringSimilarity.likeness(existing.getAddress(), newLoc.getAddress());
-                    double likeness = (nameSim + addrSim) / 2.0 * 100;
-
-                    return new SimilarLocationDTO(mapper.toDto(existing), likeness);
-                })
-                .filter(dto -> dto.getLikeness() >= 80)
-                .sorted((a, b) -> {
-                    int typeCompare = Boolean.compare(
-                            b.getLocation().getType().equals(newLoc.getType()),
-                            a.getLocation().getType().equals(newLoc.getType())
-                    );
-                    if (typeCompare != 0) return typeCompare;
-                    return Double.compare(b.getLikeness(), a.getLikeness());
-                })
-                .toList();
+        return nearbySimilar.stream().map(mapper::toDto).toList();
     }
+
 
     public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId) {
         Optional<Location> locationOptional = repository.findById(locationId);

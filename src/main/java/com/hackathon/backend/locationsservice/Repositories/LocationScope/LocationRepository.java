@@ -14,10 +14,31 @@ import java.util.UUID;
 @Repository
 public interface LocationRepository extends JpaRepository<Location, UUID> {
 
-    @Query(value = """
-        SELECT * FROM locations l
-        WHERE ST_DWithin(l.coordinates, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, 50)
-        """, nativeQuery = true)
-    List<Location> findNearby(@Param("lat") double lat, @Param("lng") double lng);
     List<Location> findAllByName(String name);
+
+    @Query(value = """
+    SELECT *
+    FROM locations l
+    WHERE ST_DWithin(
+              l.coordinates,
+              ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
+              100
+          )
+      AND (
+          similarity(LOWER(l.name), LOWER(:name)) > 0.3
+          OR similarity(LOWER(l.address), LOWER(:address)) > 0.3
+      )
+    ORDER BY (
+        similarity(LOWER(l.name), LOWER(:name))
+        + similarity(LOWER(l.address), LOWER(:address))
+    ) DESC
+    LIMIT 20
+    """, nativeQuery = true)
+    List<Location> findNearbySimilarLocations(
+            @Param("lat") double lat,
+            @Param("lng") double lng,
+            @Param("name") String name,
+            @Param("address") String address
+    );
+
 }

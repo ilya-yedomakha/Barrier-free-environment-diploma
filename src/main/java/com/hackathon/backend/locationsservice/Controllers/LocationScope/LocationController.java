@@ -89,6 +89,7 @@ public class LocationController {
 //            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
 //        }
 //    }
+    @Deprecated
     @PutMapping("/merge/{new_location_id}/into/{old_location_id}")
     public ResponseEntity<?> mergeBarrierLocationChecks(@PathVariable(name = "new_location_id") UUID newLocationId, @PathVariable(name = "old_location_id") UUID oldLocationId) {
         Result<Location, LocationReadDTO> Result = locationService.mergeBarrierLocationChecks(newLocationId, oldLocationId);

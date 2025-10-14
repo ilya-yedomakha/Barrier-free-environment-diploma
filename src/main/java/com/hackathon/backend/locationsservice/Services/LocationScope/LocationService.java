@@ -278,7 +278,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         return repository.count();
     }
 
-
+    @Deprecated
     @Transactional
     public Result<Location, LocationReadDTO> mergeBarrierLocationChecks(UUID newLocationId, UUID oldLocationId) {
         Optional<Location> newLocationOptional = repository.findById(newLocationId);
@@ -335,6 +335,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         oldLocation.setAddress(locationPendingCopy.getAddress());
         oldLocation.setName(locationPendingCopy.getName());
         oldLocation.setUpdatedAt(locationPendingCopy.getUpdatedAt());
+        oldLocation.setUpdatedBy(locationPendingCopy.getUpdatedBy());
         oldLocation.setDescription(locationPendingCopy.getDescription());
         oldLocation.setContacts(locationPendingCopy.getContacts());
         oldLocation.setStatus(LocationStatusEnum.published);
@@ -358,6 +359,9 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+        if (locationOptional.get().getStatus() != LocationStatusEnum.published){
+            return Result.failure(LocationError.notPublished(locationId));
         }
         locationPendingCopyCreateDTO.setLocationId(locationId);
         LocationPendingCopy locationPendingCopy = locationPendingCopyMapper.toEntity(locationPendingCopyCreateDTO);

@@ -36,7 +36,6 @@ public class LocationCreateDTO extends BaseRegularCreateDTO {
 
     public WorkingHours workingHours;
 
-    @NotNull
     public UUID createdBy;
 
     public UUID updatedBy;

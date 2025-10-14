@@ -205,7 +205,6 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     }
 
 
-
     public Result<Location, LocationReadDTO> add(LocationCreateDTO locationCreateDTO) {
         Optional<LocationType> locationType = locationTypeRepository.findById(locationCreateDTO.getType());
         if (locationType.isEmpty()) {
@@ -219,7 +218,26 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (checkNameDuplicates(locations, newLocation.getName())) {
             return Result.failure(EntityError.sameName(type, newLocation.getName()));
         }
-        ;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        boolean isAdmin = false;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            newLocation.setCreatedBy(user.id());
+            if (isAdmin){
+                newLocation.setStatus(LocationStatusEnum.published);
+            }
+        }
 
         //TODO: There can be same descriptions for different locations?
 //        List<Location> locationDescriptionDuplicates = repository.findAllByDescription(newLocation.getDescription());
@@ -324,8 +342,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
         Location oldLocation = locationOptional.get();
         LocationPendingCopy locationPendingCopy = locationPendingCopyOptional.get();
-        if(!oldLocation.getId().equals(locationPendingCopy.getLocation().getId())){
-            return Result.failure(LocationError.locationMismatch(locationId,locationPendingCopy.getLocation().getId()));
+        if (!oldLocation.getId().equals(locationPendingCopy.getLocation().getId())) {
+            return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));
         }
         List<Location> locations = repository.findAll();
         if (checkNameDuplicates(locations, locationPendingCopy.getName())) {
@@ -360,7 +378,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
         }
-        if (locationOptional.get().getStatus() != LocationStatusEnum.published){
+        if (locationOptional.get().getStatus() != LocationStatusEnum.published) {
             return Result.failure(LocationError.notPublished(locationId));
         }
         locationPendingCopyCreateDTO.setLocationId(locationId);
@@ -398,8 +416,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
         final UUID currentUserId = userId;
 
-        List<LocationPendingCopy> previousUpdates = locationPendingCopyRepository.findAllByLocation_IdAndUpdatedBy(locationId,currentUserId);
-        if (previousUpdates != null && !previousUpdates.isEmpty()){
+        List<LocationPendingCopy> previousUpdates = locationPendingCopyRepository.findAllByLocation_IdAndUpdatedBy(locationId, currentUserId);
+        if (previousUpdates != null && !previousUpdates.isEmpty()) {
             locationPendingCopyRepository.deleteAll(previousUpdates);
         }
 

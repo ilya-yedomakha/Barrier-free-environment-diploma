@@ -173,6 +173,17 @@ public class LocationController {
         }
     }
 
+    @GetMapping("/pending-locations")
+    public ResponseEntity<?> getAllPendingLocations() {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> result = locationService.getAllPendingLocations();
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
+
     @GetMapping("/test")
     public ResponseEntity<?> testEndpoint() {
         Map<String, String> response = new HashMap<>();

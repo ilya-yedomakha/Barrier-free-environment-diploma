@@ -674,4 +674,12 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.setEntityDTOs(entities.stream().map(locationPendingCopyMapper::toDto).toList());
         return res;
     }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> getAllPendingLocations() {
+        List<LocationPendingCopy> entities = locationPendingCopyRepository.findAll();
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.setEntities(entities);
+        res.entityDTOs = entities.stream().map(locationPendingCopyMapper::toDto).toList();
+        return res;
+    }
 }

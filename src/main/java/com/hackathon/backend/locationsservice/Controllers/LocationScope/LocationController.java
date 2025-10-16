@@ -152,7 +152,6 @@ public class LocationController {
     }
 
 
-
     @PostMapping
     ResponseEntity<?> add(@RequestBody LocationCreateDTO locationCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.add(locationCreateDTO);
@@ -192,10 +191,21 @@ public class LocationController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/me/{id}/criteria-tree")
+    public ResponseEntity<?> getCriteriaTreeByUser(
+            @PathVariable UUID id
+    ) {
+        Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTreeByUser(id);
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
     @GetMapping("/{id}/criteria-tree")
     public ResponseEntity<?> getCriteriaTree(
-            @PathVariable UUID id,
-            @RequestParam(required = false) UUID userId // 👈 ось тут
+            @PathVariable UUID id
     ) {
         Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTree(id);
         if (result.isSuccess()) {

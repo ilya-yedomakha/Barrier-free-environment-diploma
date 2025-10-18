@@ -1,9 +1,14 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationTypeCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationTypeCreateMapper;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationTypeReadMapper;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationTypeMapper;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaCheckDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
@@ -16,32 +21,32 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public class LocationTypeService extends GeneralService<LocationTypeReadMapper, LocationTypeReadDTO, LocationType, LocationTypeRepository> {
-    private final LocationTypeCreateMapper locationTypeCreateMapper;
+public class LocationTypeService extends GeneralService<LocationTypeMapper, LocationTypeReadDTO, LocationTypeCreateDTO, LocationType, LocationTypeRepository> {
     private final BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository;
 
-    LocationTypeService(LocationTypeRepository locationTypeRepository, LocationTypeReadMapper locationTypeReadMapper, LocationTypeCreateMapper locationTypeCreateMapper, BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository) {
-        super(locationTypeRepository, LocationType.class, locationTypeReadMapper);
-        this.locationTypeCreateMapper = locationTypeCreateMapper;
+    LocationTypeService(LocationTypeRepository locationTypeRepository, LocationTypeMapper locationTypeMapper, BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository) {
+        super(locationTypeRepository, LocationType.class, locationTypeMapper);
         this.barrierlessCriteriaGroupRepository = barrierlessCriteriaGroupRepository;
     }
 
     public Result<LocationType, LocationTypeReadDTO> add(LocationTypeCreateDTO locationTypeCreateDTO) {
         Optional<BarrierlessCriteriaGroup> barrierlessCriteriaGroup = barrierlessCriteriaGroupRepository.findById(locationTypeCreateDTO.getBarrierlessCriteriaGroupId());
         if (barrierlessCriteriaGroup.isEmpty()) {
-            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class,locationTypeCreateDTO.getBarrierlessCriteriaGroupId()));
+            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class, locationTypeCreateDTO.getBarrierlessCriteriaGroupId()));
         }
-        LocationType newLocationType = locationTypeCreateMapper.toEntity(locationTypeCreateDTO);
+        LocationType newLocationType = mapper.toEntity(locationTypeCreateDTO);
         if (newLocationType == null) {
             return Result.failure(EntityError.nullReference(type));
         }
 
         List<LocationType> locationTypes = repository.findAll();
-        if(checkNameDuplicates(locationTypes,newLocationType.getName())){
+        if (checkNameDuplicates(locationTypes, newLocationType.getName())) {
             return Result.failure(EntityError.sameName(type, newLocationType.getName()));
-        };
+        }
+        ;
 
         //TODO: There can be same descriptions for different locations?
 //        List<LocationType> locationTypeDescriptionDuplicates = repository.findAllByDescription(newLocationType.getDescription());

@@ -11,6 +11,8 @@ import com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope.
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -22,15 +24,20 @@ public class BarrierlessCriteriaController {
 
     private final BarrierlessCriteriaService barrierlessCriteriaService;
 
-    @GetMapping()
-    public ResponseEntity<?> getAllBarrierlessCriterias() {
-        Result<BarrierlessCriteria, BarrierlessCriteriaReadDTO> Result = barrierlessCriteriaService.getAll();
-        if (Result.isSuccess()) {
-            return ResponseEntity.ok(Result.getEntityDTOs());
+    @GetMapping
+    public ResponseEntity<?> getBarrierlessCriterias(@RequestParam(name = "type_id", required = false) UUID criteriaTypeId) {
+        if (criteriaTypeId != null) {
+            return ResponseEntity.ok(barrierlessCriteriaService.findAllByTypeId(criteriaTypeId));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+            Result<BarrierlessCriteria, BarrierlessCriteriaReadDTO> result = barrierlessCriteriaService.getAll();
+            if (result.isSuccess()) {
+                return ResponseEntity.ok(result.getEntityDTOs());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result.getError());
+            }
         }
     }
+
 
     @GetMapping("/{barrierless_criteria_id}/")
     public ResponseEntity<?> getBarrierlessCriteriaById(@PathVariable(name = "barrierless_criteria_id") UUID barrierlessCriteriaId) {
@@ -42,7 +49,9 @@ public class BarrierlessCriteriaController {
         }
     }
 
+
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> createBarrierlessCriteria(@RequestBody BarrierlessCriteriaCreateDTO check) {
 
         Result<BarrierlessCriteria, BarrierlessCriteriaReadDTO> Result = barrierlessCriteriaService.add(check);
@@ -52,5 +61,13 @@ public class BarrierlessCriteriaController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
         }
+    }
+
+    @PutMapping("/{criteria_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    ResponseEntity<?> updateBarrierlessCriteria(@PathVariable("criteria_id") UUID criteriaId,
+                                                @RequestBody BarrierlessCriteriaCreateDTO check) {
+
+        return ResponseEntity.ok(barrierlessCriteriaService.update(criteriaId, check));
     }
 }

@@ -1,10 +1,10 @@
 package com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope;
 
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.BarrierlessCriteriaScope.BarrierlessCriteriaGroupCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.BarrierlessCriteriaScope.BarrierlessCriteriaTypeCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.BarrierlessCriteriaScope.BarrierlessCriteriaGroupReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.BarrierlessCriteriaScope.BarrierlessCriteriaTypeReadDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.BarrierlessCriteriaScope.BarrierlessCriteriaGroupCreateMapper;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.BarrierlessCriteriaScope.BarrierlessCriteriaTypeCreateMapper;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.BarrierlessCriteriaScope.BarrierlessCriteriaTypeReadMapper;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.BarrierlessCriteriaScope.BarrierlessCriteriaTypeMapper;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaGroup;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaType;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaGroupRepository;
@@ -14,18 +14,19 @@ import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
-public class BarrierlessCriteriaTypeService extends GeneralService<BarrierlessCriteriaTypeReadMapper, BarrierlessCriteriaTypeReadDTO, BarrierlessCriteriaType, BarrierlessCriteriaTypeRepository> {
+public class BarrierlessCriteriaTypeService extends GeneralService<BarrierlessCriteriaTypeMapper, BarrierlessCriteriaTypeReadDTO, BarrierlessCriteriaTypeCreateDTO, BarrierlessCriteriaType, BarrierlessCriteriaTypeRepository> {
 
-    private final BarrierlessCriteriaTypeCreateMapper barrierlessCriteriaTypeCreateMapper;
     private final BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository;
 
-    BarrierlessCriteriaTypeService(BarrierlessCriteriaTypeRepository barrierlessCriteriaTypeRepository, BarrierlessCriteriaTypeReadMapper barrierlessCriteriaTypeReadMapper, BarrierlessCriteriaTypeCreateMapper barrierlessCriteriaTypeCreateMapper, BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository){
-        super(barrierlessCriteriaTypeRepository, BarrierlessCriteriaType.class,barrierlessCriteriaTypeReadMapper);
-        this.barrierlessCriteriaTypeCreateMapper = barrierlessCriteriaTypeCreateMapper;
+    BarrierlessCriteriaTypeService(BarrierlessCriteriaTypeRepository barrierlessCriteriaTypeRepository, BarrierlessCriteriaTypeMapper barrierlessCriteriaTypeMapper, BarrierlessCriteriaGroupRepository barrierlessCriteriaGroupRepository){
+        super(barrierlessCriteriaTypeRepository, BarrierlessCriteriaType.class,barrierlessCriteriaTypeMapper);
         this.barrierlessCriteriaGroupRepository = barrierlessCriteriaGroupRepository;
     }
 
@@ -34,7 +35,7 @@ public class BarrierlessCriteriaTypeService extends GeneralService<BarrierlessCr
         if (barrierlessCriteriaGroup.isEmpty()) {
             return Result.failure(EntityError.notFound(BarrierlessCriteriaType.class,barrierlessCriteriaTypeCreateDTO.getBarrierlessCriteriaGroupId()));
         }
-        BarrierlessCriteriaType newBarrierlessCriteriaType = barrierlessCriteriaTypeCreateMapper.toEntity(barrierlessCriteriaTypeCreateDTO);
+        BarrierlessCriteriaType newBarrierlessCriteriaType = mapper.toEntity(barrierlessCriteriaTypeCreateDTO);
         if (newBarrierlessCriteriaType == null) {
             return Result.failure(EntityError.nullReference(type));
         }
@@ -64,6 +65,37 @@ public class BarrierlessCriteriaTypeService extends GeneralService<BarrierlessCr
         res.entity = savedBarrierlessCriteriaType;
         res.entityDTO = mapper.toDto(savedBarrierlessCriteriaType);
 
+        return res;
+    }
+
+    public List<BarrierlessCriteriaTypeReadDTO> findAllByGroupId(UUID groupId){
+
+        return super.repository.findByBarrierlessCriteriaGroup_Id(groupId).stream().map(mapper::toDto).toList();
+    }
+
+    public Result<BarrierlessCriteriaType, BarrierlessCriteriaTypeReadDTO> update(UUID typeId, BarrierlessCriteriaTypeCreateDTO updateDTO) {
+
+        BarrierlessCriteriaType criteriaType = repository.findById(typeId).orElse(null);
+
+        if(criteriaType == null){
+            return Result.failure(EntityError.notFound(type,typeId));
+        }
+
+        criteriaType.setName(updateDTO.getName());
+        criteriaType.setDescription(updateDTO.getDescription());
+        criteriaType.setUpdatedAt(LocalDateTime.now());
+
+        if(updateDTO.getBarrierlessCriteriaGroupId() != null){
+
+            criteriaType.setBarrierlessCriteriaGroup(barrierlessCriteriaGroupRepository
+                    .getReferenceById(updateDTO.getBarrierlessCriteriaGroupId()));
+        }
+
+        criteriaType = repository.save(criteriaType);
+
+        Result<BarrierlessCriteriaType, BarrierlessCriteriaTypeReadDTO> res = Result.success();
+        res.entity = criteriaType;
+        res.entityDTO = mapper.toDto(criteriaType);
         return res;
     }
 

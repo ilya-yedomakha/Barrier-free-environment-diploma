@@ -1,14 +1,20 @@
 package com.hackathon.backend.locationsservice.Controllers.LocationScope;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Create.LocationScope.LocationCreateMapper;
-import com.hackathon.backend.locationsservice.DTOs.Mappers.Read.LocationScope.LocationReadMapper;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,10 +33,9 @@ import java.util.UUID;
 public class LocationController {
 
     private final LocationService locationService;
-    private final LocationCreateMapper locationCreateMapper;
-    private final LocationReadMapper locationReadMapper;
 
     @GetMapping()
+    @PermitAll
     public ResponseEntity<?> getLocations(
             @RequestParam(name = "lat", required = false) Double lat,
             @RequestParam(name = "lng", required = false) Double lng,
@@ -59,8 +65,7 @@ public class LocationController {
         filters.put("limit", limit);
 
 
-
-        Result<Location,LocationListViewDTO> result = locationService.getAll(filters);
+        Result<Location, LocationListViewDTO> result = locationService.getAll(filters);
 
         return ResponseEntity.ok(result.getEntityDTO());
     }
@@ -75,6 +80,78 @@ public class LocationController {
         }
     }
 
+    //    @GetMapping("/{location_id}/barrierless_criteria_checks")
+//    public ResponseEntity<?> getBarrierlessCriteriaChecksByLocationId(@PathVariable(name = "location_id") UUID locationId) {
+//        Result<Location, LocationReadDTO> Result = locationService.getById(locationId);
+//        if (Result.isSuccess()) {
+//            return ResponseEntity.ok(Result.getEntityDTO());
+//        } else {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+//        }
+//    }
+    @Deprecated
+    @PutMapping("/merge/{new_location_id}/into/{old_location_id}")
+    public ResponseEntity<?> mergeBarrierLocationChecks(@PathVariable(name = "new_location_id") UUID newLocationId, @PathVariable(name = "old_location_id") UUID oldLocationId) {
+        Result<Location, LocationReadDTO> Result = locationService.mergeBarrierLocationChecks(newLocationId, oldLocationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
+
+    @PutMapping("/{location_id}/")
+    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @RequestBody LocationCreateDTO locationCreateDTO) {
+        Result<Location, LocationReadDTO> Result = locationService.update(locationId, locationCreateDTO);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @PutMapping("/{location_id}/pending_copy/{pending_copy_id}")
+    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "pending_copy_id") Long pendingCopyId) {
+        Result<Location, LocationReadDTO> Result = locationService.update(locationId, pendingCopyId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @PostMapping("/to_pending/{location_id}/")
+    ResponseEntity<?> CreatePendingLocation(@PathVariable(name = "location_id") UUID locationId, @RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.createPendingCopy(locationId, locationPendingCopyCreateDTO);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @PostMapping("/calculate/barrierless-score")
+    ResponseEntity<?> calculateBarrierlessScore() {
+        locationService.calculateBarrierlessScore();
+        return ResponseEntity.ok("пораховано");
+    }
+
+    @PostMapping("/check-duplicates")
+    public ResponseEntity<?> checkDuplicates(@RequestBody LocationCreateDTO newLocation) {
+        List<LocationReadDTO> similar = locationService.findSimilar(newLocation);
+
+        if (!similar.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of(
+                            "message", "Found similar locations nearby",
+                            "similar", similar
+                    ));
+        }
+
+        return ResponseEntity.ok(Map.of("message", "No duplicates found"));
+    }
+
+
     @PostMapping
     ResponseEntity<?> add(@RequestBody LocationCreateDTO locationCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.add(locationCreateDTO);
@@ -85,6 +162,37 @@ public class LocationController {
         }
     }
 
+    @GetMapping("/me/pending-locations/")
+    ResponseEntity<?> getUserPendingLocations() {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocations();
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/{location_id}/pending-locations/")
+    ResponseEntity<?> GetPendingLocationsByLocationId(@PathVariable(name = "location_id") UUID locationId) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getPendingLocationsByLocationId(locationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/pending-locations")
+    public ResponseEntity<?> getAllPendingLocations() {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> result = locationService.getAllPendingLocations();
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
+
     @GetMapping("/test")
     public ResponseEntity<?> testEndpoint() {
         Map<String, String> response = new HashMap<>();
@@ -92,4 +200,29 @@ public class LocationController {
         response.put("message", "LocationController is working correctly");
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/me/{id}/criteria-tree")
+    public ResponseEntity<?> getCriteriaTreeByUser(
+            @PathVariable UUID id
+    ) {
+        Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTreeByUser(id);
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
+    @GetMapping("/{id}/criteria-tree")
+    public ResponseEntity<?> getCriteriaTree(
+            @PathVariable UUID id
+    ) {
+        Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTree(id);
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
 }

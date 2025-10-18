@@ -1,7 +1,8 @@
 package com.hackathon.backend.locationsservice.Domain.Core.LocationScope;
 
-import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.Base.NamedEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
@@ -9,14 +10,18 @@ import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Point;
 
-
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -35,6 +40,13 @@ public class Location extends NamedEntity {
     @NotNull
     @Column(columnDefinition = "geometry(Point,4326)", nullable = false)
     private Point coordinates;
+
+
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<BarrierlessCriteriaCheck> barrierlessCriteriaChecks = new HashSet<>();
+
+    @OneToMany(mappedBy = "location",cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<LocationPendingCopy> pendingLocations = new HashSet<>();
 
     @NotNull
     @ManyToOne
@@ -61,7 +73,7 @@ public class Location extends NamedEntity {
     @Column(name = "organization_id")
     private UUID organizationId;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "status", nullable = false)
     private LocationStatusEnum status;
 
@@ -72,12 +84,18 @@ public class Location extends NamedEntity {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @NotNull
-    @Column(nullable = false)
+    @Column(nullable = true)
+    private UUID updatedBy;
+
+    @Column(nullable = true)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime lastVerifiedAt;
+
+
+    @Column(nullable = true)
+    private UUID lastVerifiedBy;
 
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;

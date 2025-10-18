@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class Result<TEntity,TDTO extends BaseReadDTO> {
+public class Result<TEntity,TDTO> {
 
     public final boolean isSuccess;
     public final Error error;
@@ -28,11 +28,11 @@ public class Result<TEntity,TDTO extends BaseReadDTO> {
         this.error = error;
     }
 
-    public static <TEntity, TDTO extends BaseReadDTO> Result<TEntity, TDTO> success() {
+    public static <TEntity, TDTO> Result<TEntity, TDTO> success() {
         return new Result<>(true, Error.NONE);
     }
 
-    public static <TModel, TDTO extends BaseReadDTO> Result<TModel, TDTO> failure(Error error) {
+    public static <TModel, TDTO> Result<TModel, TDTO> failure(Error error) {
         return new Result<>(false, error);
     }
 }

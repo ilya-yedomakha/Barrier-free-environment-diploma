@@ -2,6 +2,7 @@ package com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaSc
 
 
 import com.hackathon.backend.locationsservice.Domain.Core.Base.BaseEntity;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Domain.Enums.BarrierlessCriteriaRank;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -9,8 +10,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -30,6 +33,9 @@ public class BarrierlessCriteria extends BaseEntity {
     @JoinColumn(name="barrierless_criteria_type_id", nullable = false)
     private BarrierlessCriteriaType barrierlessCriteriaType;
 
+    @OneToMany(mappedBy="barrierlessCriteria")
+    private Set<BarrierlessCriteriaCheck> barrierlessCriteriaChecks;
+
     @NotNull
     @Column(nullable = false)
     private UUID createdBy;
@@ -42,7 +48,8 @@ public class BarrierlessCriteria extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Enumerated
-    @NotNull
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "rank", nullable = false)
+    @ColumnDefault("'moderate'")
     private BarrierlessCriteriaRank barrierlessCriteriaRank;
 }

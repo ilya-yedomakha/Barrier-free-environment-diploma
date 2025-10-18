@@ -4,6 +4,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationTypeCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
 import com.hackathon.backend.locationsservice.Result.Result;
@@ -11,6 +12,8 @@ import com.hackathon.backend.locationsservice.Services.LocationScope.LocationTyp
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -18,6 +21,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/location-types")
 @RequiredArgsConstructor
+
 public class LocationTypeController {
 
     private final LocationTypeService locationTypeService;
@@ -43,6 +47,7 @@ public class LocationTypeController {
     }
 
     @PostMapping("/")
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> add(@RequestBody LocationTypeCreateDTO locationTypeCreateDTO) {
         Result<LocationType, LocationTypeReadDTO> Result = locationTypeService.add(locationTypeCreateDTO);
         if (Result.isSuccess()) {

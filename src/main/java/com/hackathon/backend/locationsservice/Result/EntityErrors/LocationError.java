@@ -4,12 +4,21 @@ import com.hackathon.backend.locationsservice.Result.Error;
 import org.locationtech.jts.geom.Location;
 import org.locationtech.jts.geom.Point;
 
+import java.util.UUID;
+
 public class LocationError {
 
     public static Error sameCoordinates(Point coordinates) {
         return new Error(
                 Location.class.getSimpleName() + ".sameCoordinates",
-                "There is already a " + Location.class.getSimpleName() + " with "+coordinates.getX()+" and "+coordinates.getY() + "present"
+                "There is already a " + Location.class.getSimpleName() + " with " + coordinates.getX() + " and " + coordinates.getY() + "present"
+        );
+    }
+
+    public static Error locationMismatch(UUID locationId, UUID locationId2) {
+        return new Error(
+                Location.class.getSimpleName() + ".locationIdMismatch",
+                "Given location id: " + locationId2 + " does not correspond to Location's real id:" + locationId
         );
     }
 
@@ -21,4 +30,10 @@ public class LocationError {
         );
     }
 
+    public static Error notPublished(UUID locationId) {
+        return new Error(
+                Location.class.getSimpleName() + ".notPublished",
+                "You can't edit location that was not verified yet."
+        );
+    }
 }

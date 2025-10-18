@@ -89,6 +89,7 @@ public class LocationController {
 //            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
 //        }
 //    }
+    @Deprecated
     @PutMapping("/merge/{new_location_id}/into/{old_location_id}")
     public ResponseEntity<?> mergeBarrierLocationChecks(@PathVariable(name = "new_location_id") UUID newLocationId, @PathVariable(name = "old_location_id") UUID oldLocationId) {
         Result<Location, LocationReadDTO> Result = locationService.mergeBarrierLocationChecks(newLocationId, oldLocationId);
@@ -129,9 +130,15 @@ public class LocationController {
         }
     }
 
+    @PostMapping("/calculate/barrierless-score")
+    ResponseEntity<?> calculateBarrierlessScore() {
+        locationService.calculateBarrierlessScore();
+        return ResponseEntity.ok("пораховано");
+    }
+
     @PostMapping("/check-duplicates")
     public ResponseEntity<?> checkDuplicates(@RequestBody LocationCreateDTO newLocation) {
-        List<SimilarLocationDTO> similar = locationService.findSimilar(newLocation);
+        List<LocationReadDTO> similar = locationService.findSimilar(newLocation);
 
         if (!similar.isEmpty()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -155,6 +162,37 @@ public class LocationController {
         }
     }
 
+    @GetMapping("/me/pending-locations/")
+    ResponseEntity<?> getUserPendingLocations() {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocations();
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/{location_id}/pending-locations/")
+    ResponseEntity<?> GetPendingLocationsByLocationId(@PathVariable(name = "location_id") UUID locationId) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getPendingLocationsByLocationId(locationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/pending-locations")
+    public ResponseEntity<?> getAllPendingLocations() {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> result = locationService.getAllPendingLocations();
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
+
     @GetMapping("/test")
     public ResponseEntity<?> testEndpoint() {
         Map<String, String> response = new HashMap<>();
@@ -163,10 +201,21 @@ public class LocationController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/me/{id}/criteria-tree")
+    public ResponseEntity<?> getCriteriaTreeByUser(
+            @PathVariable UUID id
+    ) {
+        Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTreeByUser(id);
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
     @GetMapping("/{id}/criteria-tree")
     public ResponseEntity<?> getCriteriaTree(
-            @PathVariable UUID id,
-            @RequestParam(required = false) UUID userId // 👈 ось тут
+            @PathVariable UUID id
     ) {
         Result<LocationType, LocationTypeWithGroupDTO> result = locationService.getCriteriaTree(id);
         if (result.isSuccess()) {

@@ -84,12 +84,18 @@ public class Location extends NamedEntity {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @NotNull
-    @Column(nullable = false)
+    @Column(nullable = true)
+    private UUID updatedBy;
+
+    @Column(nullable = true)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime lastVerifiedAt;
+
+
+    @Column(nullable = true)
+    private UUID lastVerifiedBy;
 
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;

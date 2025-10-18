@@ -37,6 +37,10 @@ public class LocationReadDTO extends BaseRegularReadDTO {
 
     public UUID createdBy;
 
+    public UUID updatedBy;
+
+    public UUID lastVerifiedBy;
+
     public UUID organizationId;
 
     public LocationStatusEnum status;

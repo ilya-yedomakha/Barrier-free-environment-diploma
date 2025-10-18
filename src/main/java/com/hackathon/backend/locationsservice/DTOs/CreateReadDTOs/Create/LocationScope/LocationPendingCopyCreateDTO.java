@@ -53,4 +53,8 @@ public class LocationPendingCopyCreateDTO extends BaseRegularCreateDTO {
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @NotNull
+    @Column(nullable = false)
+    private UUID updatedBy;
+
 }

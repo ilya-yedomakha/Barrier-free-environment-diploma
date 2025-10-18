@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 @Aspect
@@ -26,6 +27,11 @@ public class AspectLocationScore {
     @Pointcut("execution(public * com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope." +
             "BarrierlessCriteriaCheckService.add(..))")
     public void addMethod() {
+    }
+
+    @Pointcut("execution(public * com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope." +
+            "BarrierlessCriteriaCheckService.addAll(..))")
+    public void addAllMethod() {
     }
 
     @Pointcut("execution(public void com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope." +
@@ -81,4 +87,27 @@ public class AspectLocationScore {
     }
 
 
+    @AfterReturning(pointcut = "addAllMethod()", returning = "result")
+    public void afterAddAll(Object result) {
+
+        if (result instanceof Result<?, ?> res) {
+
+            Object entities = res.getEntities();
+
+            if (entities instanceof List<?> list) {
+                for (Object entity : list) {
+                    if (entity instanceof BarrierlessCriteriaCheck added) {
+
+                        UUID id = added.getLocation().getId();
+
+                        LocationScoreChg locChg = new LocationScoreChg();
+                        locChg.setLocationId(id);
+                        locationScoreChgRepository.save(locChg);
+
+                        log.info("LocationScoreChgRepository saved(after addAll()): " + locChg.getLocationId());
+                    }
+                }
+            }
+        }
+    }
 }

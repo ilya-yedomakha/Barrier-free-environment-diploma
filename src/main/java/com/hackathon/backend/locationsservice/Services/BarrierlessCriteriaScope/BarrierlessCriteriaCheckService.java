@@ -9,11 +9,14 @@ import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.*;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationScoreChgRepository;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.CheckError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
+import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
 import com.hackathon.backend.locationsservice.Security.Repositories.UserRepository;
@@ -30,6 +33,7 @@ public class BarrierlessCriteriaCheckService{
     private final BarrierlessCriteriaRepository barrierlessCriteriaRepository;
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
+    private final LocationScoreChgRepository locationScoreChgRepository;
     private final BarrierlessCriteriaCheckMapper barrierlessCriteriaCheckMapper;
 
 
@@ -57,6 +61,9 @@ public class BarrierlessCriteriaCheckService{
         }
         BarrierlessCriteria barrierlessCriteria = barrierlessCriteriaOptional.get();
         Location location = locationOptional.get();
+        if (locationOptional.get().getStatus() != LocationStatusEnum.published){
+            return Result.failure(LocationError.notPublished(locationId));
+        }
         LocationType locationType = location.getType();
         Set<LocationType> criteriaLocationTypes = barrierlessCriteria.getBarrierlessCriteriaType().getBarrierlessCriteriaGroup().getLocationTypes();
         if (!criteriaLocationTypes.contains(locationType)){

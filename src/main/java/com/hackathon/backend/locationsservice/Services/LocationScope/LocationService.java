@@ -739,4 +739,17 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entityDTOs = entities.stream().map(locationPendingCopyMapper::toDto).toList();
         return res;
     }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> getPendingLocationsByLocationId(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        List<LocationPendingCopy> entities = locationPendingCopyRepository.getLocationPendingCopiesByLocation(locationOptional.get());
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.setEntities(entities);
+        res.entityDTOs = entities.stream().map(locationPendingCopyMapper::toDto).toList();
+        return res;
+    }
 }

@@ -172,6 +172,16 @@ public class LocationController {
         }
     }
 
+    @GetMapping("/{location_id}/pending-locations/")
+    ResponseEntity<?> GetPendingLocationsByLocationId(@PathVariable(name = "location_id") UUID locationId) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getPendingLocationsByLocationId(locationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
     @GetMapping("/pending-locations")
     public ResponseEntity<?> getAllPendingLocations() {
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> result = locationService.getAllPendingLocations();

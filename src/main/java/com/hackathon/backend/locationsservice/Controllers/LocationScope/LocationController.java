@@ -4,6 +4,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
 import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
@@ -73,6 +74,16 @@ public class LocationController {
     @GetMapping("/{location_id}/")
     public ResponseEntity<?> getLocationById(@PathVariable(name = "location_id") UUID locationId) {
         Result<Location, LocationReadDTO> Result = locationService.getById(locationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/{location_id}/location_type")
+    public ResponseEntity<?> getLocationTypeByLocationId(@PathVariable(name = "location_id") UUID locationId) {
+        Result<LocationType, LocationTypeReadDTO> Result = locationService.getLocationTypeByLocationId(locationId);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
         } else {

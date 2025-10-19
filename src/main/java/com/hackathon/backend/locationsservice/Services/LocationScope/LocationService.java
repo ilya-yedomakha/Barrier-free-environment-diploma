@@ -4,8 +4,10 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationPendingCopyMapper;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationTypeMapper;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaCheckDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
@@ -61,18 +63,20 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final LocationTypeRepository locationTypeRepository;
     private final BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository;
     private final LocationPendingCopyMapper locationPendingCopyMapper;
+    private final LocationTypeMapper locationTypeMapper;
     private final LocationPendingCopyRepository locationPendingCopyRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
     private final UserServiceImpl userService;
 
     LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
-                    LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository,
+                    LocationPendingCopyMapper locationPendingCopyMapper, LocationTypeMapper locationTypeMapper, LocationPendingCopyRepository locationPendingCopyRepository,
                     LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService) {
 
         super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
         this.barrierlessCriteriaCheckRepository = barrierlessCriteriaCheckRepository;
         this.locationPendingCopyMapper = locationPendingCopyMapper;
+        this.locationTypeMapper = locationTypeMapper;
         this.locationPendingCopyRepository = locationPendingCopyRepository;
         this.locationScoreChgRepository = locationScoreChgRepository;
         this.userService = userService;
@@ -750,6 +754,18 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
         res.setEntities(entities);
         res.entityDTOs = entities.stream().map(locationPendingCopyMapper::toDto).toList();
+        return res;
+    }
+
+    public Result<LocationType, LocationTypeReadDTO> getLocationTypeByLocationId(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Result<LocationType, LocationTypeReadDTO> res = Result.success();
+        res.setEntity(locationOptional.get().getType());
+        res.setEntityDTO(locationTypeMapper.toDto(locationOptional.get().getType()));
         return res;
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -14,6 +15,9 @@ public interface BarrierlessCriteriaCheckRepository
 
     List<BarrierlessCriteriaCheck> findAllByBarrierlessCriteria_IdAndLocation_Id(UUID barrierlessCriteriaId,
                                                                                  UUID locationId);
+
+    Optional<BarrierlessCriteriaCheck> findAllByBarrierlessCriteria_IdAndLocation_IdAndUser_Id(UUID barrierlessCriteriaId,
+                                                                                               UUID locationId, UUID userId);
 
     List<BarrierlessCriteriaCheck> findAllByLocation_Id(UUID locationId);
 

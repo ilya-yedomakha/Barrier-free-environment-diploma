@@ -1,19 +1,21 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
+import com.hackathon.backend.locationsservice.AMPQElements.LocationCreationEventPub;
+import com.hackathon.backend.locationsservice.AMPQElements.ModerationTextEventPub;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationPendingCopyMapper;
+import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.text_moderation.ModerationElementType;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaCheckDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
-import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
-import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.IdReplacementRequest;
-import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.TypeOfImageReplacement;
+import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.images.IdReplacementRequest;
+import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.images.TypeOfImageReplacement;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
@@ -35,13 +37,9 @@ import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
-import com.hackathon.backend.locationsservice.Security.Domain.User;
-import com.hackathon.backend.locationsservice.Security.Services.UserService;
 import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
-import com.hackathon.backend.locationsservice.Services.util.StringSimilarity;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
@@ -67,23 +65,23 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final LocationPendingCopyRepository locationPendingCopyRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
     private final UserServiceImpl userService;
-    private final LocationEventPub locationEventPub;
+    private final LocationCreationEventPub locationCreationEventPub;
+    private final ModerationTextEventPub moderationTextEventPub;
 
     LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
                     LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository,
-                    LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService) {
+                    LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService,
+                    LocationCreationEventPub locationCreationEventPub,ModerationTextEventPub moderationTextEventPub) {
 
         super(locationRepository, Location.class, locationMapper);
-    LocationService(LocationRepository locationRepository, LocationReadMapper locationReadMapper, LocationCreateMapper locationCreateMapper, LocationTypeRepository locationTypeRepository, LocationEventPub locationEventPub) {
-        super(locationRepository, Location.class, locationReadMapper);
-        this.locationCreateMapper = locationCreateMapper;
         this.locationTypeRepository = locationTypeRepository;
-        this.locationEventPub = locationEventPub;
+        this.locationCreationEventPub = locationCreationEventPub;
         this.barrierlessCriteriaCheckRepository = barrierlessCriteriaCheckRepository;
         this.locationPendingCopyMapper = locationPendingCopyMapper;
         this.locationPendingCopyRepository = locationPendingCopyRepository;
         this.locationScoreChgRepository = locationScoreChgRepository;
         this.userService = userService;
+        this.moderationTextEventPub = moderationTextEventPub;
     }
 
     @PersistenceContext
@@ -320,11 +318,14 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                 .newId(savedLocation.getId())
                 .correlationId(locationCreateDTO.correlationId)
                 .typeOfImageReplacement(TypeOfImageReplacement.LocationImage).build();
-        locationEventPub.locationCreated(replacementRequest);
+        locationCreationEventPub.locationCreated(replacementRequest);
 
         Result<Location, LocationReadDTO> res = Result.success();
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
+
+        moderationTextEventPub.sendTextForModeration(savedLocation.getId().toString(), ModerationElementType.LOCATION,
+                savedLocation.getName().concat(" ").concat(savedLocation.getDescription()));
 
         return res;
 
@@ -365,6 +366,10 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Result<Location, LocationReadDTO> res = Result.success();
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
+
+        moderationTextEventPub.sendTextForModeration(newLocation.getId().toString(), ModerationElementType.LOCATION,
+                newLocation.getName().concat(" ").concat(newLocation.getDescription()));
+
         return res;
     }
 
@@ -406,6 +411,9 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entityDTO = mapper.toDto(savedLocation);
 
         locationPendingCopyRepository.delete(locationPendingCopy);
+
+//        moderationTextEventPub.sendTextForModeration(newLocation.getId().toString(), ModerationElementType.LOCATION,
+//                newLocation.getName().concat(" ").concat(newLocation.getDescription()));
 
         return res;
 
@@ -537,6 +545,9 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Result<Location, LocationReadDTO> res = Result.success();
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
+
+        moderationTextEventPub.sendTextForModeration(savedLocation.getId().toString(), ModerationElementType.LOCATION,
+                savedLocation.getName().concat(" ").concat(savedLocation.getDescription()));
 
         return res;
 

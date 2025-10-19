@@ -1,6 +1,9 @@
 package com.hackathon.backend.locationsservice.Aspects;
 
+import com.hackathon.backend.locationsservice.AMPQElements.ModerationTextEventPub;
+import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.text_moderation.ModerationElementType;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
+import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheckEmbeddedId;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationScoreChg;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationScoreChgRepository;
 import com.hackathon.backend.locationsservice.Result.Result;
@@ -11,6 +14,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -23,6 +27,7 @@ public class AspectLocationScore {
 
     private final LocationScoreChgRepository locationScoreChgRepository;
     private final Logger log = LoggerFactory.getLogger(AspectLocationScore.class);
+    private final ModerationTextEventPub moderationTextEventPub;
 
     @Pointcut("execution(public * com.hackathon.backend.locationsservice.Services.BarrierlessCriteriaScope." +
             "BarrierlessCriteriaCheckService.add(..))")
@@ -59,6 +64,8 @@ public class AspectLocationScore {
                 locationScoreChgRepository.save(locChg);
 
                 log.info("LocationScoreChgRepository saved(after add()): " + locChg.getLocationId());
+
+                moderateCheck(added);
             }
         }
     }
@@ -105,9 +112,26 @@ public class AspectLocationScore {
                         locationScoreChgRepository.save(locChg);
 
                         log.info("LocationScoreChgRepository saved(after addAll()): " + locChg.getLocationId());
+
+                        moderateCheck(added);
                     }
                 }
             }
         }
+    }
+
+    private void moderateCheck(BarrierlessCriteriaCheck added) {
+        BarrierlessCriteriaCheck check = added;
+
+        BarrierlessCriteriaCheckEmbeddedId embeddedId = check.getBarrierlessCriteriaCheckId();
+
+        String requestId = String.join(",",
+                embeddedId.getLocationId().toString(),
+                embeddedId.getBarrierlessCriteriaId().toString(),
+                embeddedId.getUserId().toString());
+
+        moderationTextEventPub.sendTextForModeration(requestId, ModerationElementType.CHECK, check.getComment());
+
+        log.info("Check is send for moderation: " + requestId);
     }
 }

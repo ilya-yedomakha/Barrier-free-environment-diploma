@@ -1,4 +1,4 @@
-package com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs;
+package com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.images;
 
 import lombok.Builder;
 import lombok.Value;

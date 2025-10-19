@@ -122,8 +122,8 @@ public class LocationController {
     }
 
     @PutMapping("/{location_id}/pending_copy/{pending_copy_id}")
-    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "pending_copy_id") Long pendingCopyId) {
-        Result<Location, LocationReadDTO> Result = locationService.update(locationId, pendingCopyId);
+    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "pending_copy_id") Long pendingCopyId,@RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+        Result<Location, LocationReadDTO> Result = locationService.update(locationId, pendingCopyId, locationPendingCopyCreateDTO);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
         } else {

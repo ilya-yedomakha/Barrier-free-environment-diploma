@@ -334,7 +334,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         return res;
     }
 
-    public Result<Location, LocationReadDTO> update(UUID locationId, Long locationPendingCopyId) {
+    public Result<Location, LocationReadDTO> update(UUID locationId, Long locationPendingCopyId, LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
@@ -350,20 +350,20 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));
         }
         List<Location> locations = repository.findAll();
-        if (checkNameDuplicates(locations, locationPendingCopy.getName())) {
-            return Result.failure(EntityError.sameName(type, locationPendingCopy.getName()));
+        if (checkNameDuplicates(locations, locationPendingCopyCreateDTO.getName())) {
+            return Result.failure(EntityError.sameName(type, locationPendingCopyCreateDTO.getName()));
         }
 
-        oldLocation.setAddress(locationPendingCopy.getAddress());
-        oldLocation.setName(locationPendingCopy.getName());
-        oldLocation.setUpdatedAt(locationPendingCopy.getUpdatedAt());
-        oldLocation.setUpdatedBy(locationPendingCopy.getUpdatedBy());
-        oldLocation.setDescription(locationPendingCopy.getDescription());
-        oldLocation.setContacts(locationPendingCopy.getContacts());
+        oldLocation.setAddress(locationPendingCopyCreateDTO.getAddress());
+        oldLocation.setName(locationPendingCopyCreateDTO.getName());
+        oldLocation.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
+        oldLocation.setUpdatedBy(locationPendingCopyCreateDTO.getUpdatedBy());
+        oldLocation.setDescription(locationPendingCopyCreateDTO.getDescription());
+        oldLocation.setContacts(locationPendingCopyCreateDTO.getContacts());
         oldLocation.setStatus(LocationStatusEnum.published);
 
-        oldLocation.setOrganizationId(locationPendingCopy.getOrganizationId());
-        oldLocation.setWorkingHours(locationPendingCopy.getWorkingHours());
+        oldLocation.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
+        oldLocation.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
 
         Location savedLocation = repository.save(oldLocation);
         locationPendingCopyRepository.delete(locationPendingCopy);

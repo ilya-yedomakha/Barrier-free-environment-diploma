@@ -55,6 +55,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -461,12 +462,30 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                 return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));
             }
         }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
         oldLocation.setName(newLocation.getName());
-        oldLocation.setCoordinates(newLocation.getCoordinates());
+//        oldLocation.setCoordinates(newLocation.getCoordinates());
         oldLocation.setAddress(newLocation.getAddress());
-        oldLocation.setCreatedAt(newLocation.getCreatedAt());
-        oldLocation.setCreatedBy(newLocation.getCreatedBy());
-        oldLocation.setUpdatedAt(newLocation.getUpdatedAt());
+//        oldLocation.setCreatedAt(newLocation.getCreatedAt());
+//        oldLocation.setCreatedBy(newLocation.getCreatedBy());
+        oldLocation.setUpdatedAt(LocalDateTime.now());
+        oldLocation.setUpdatedBy(currentUserId);
         oldLocation.setDescription(newLocation.getDescription());
         oldLocation.setContacts(newLocation.getContacts());
         oldLocation.setStatus(newLocation.getStatus());
@@ -494,7 +513,6 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         oldLocation.setType(newLocationTypeOptional.get());
         oldLocation.setOrganizationId(newLocation.getOrganizationId());
         oldLocation.setLastVerifiedAt(newLocation.getLastVerifiedAt());
-        oldLocation.setCoordinates(newLocation.getCoordinates());
         oldLocation.setWorkingHours(newLocation.getWorkingHours());
         oldLocation.setRejectionReason(newLocation.getRejectionReason());
         oldLocation.setOverallAccessibilityScore(newLocation.getOverallAccessibilityScore());

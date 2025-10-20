@@ -111,7 +111,7 @@ public class LocationController {
         }
     }
 
-    @PutMapping("/{location_id}/")
+    @PutMapping("/{location_id}")
     ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @RequestBody LocationCreateDTO locationCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.update(locationId, locationCreateDTO);
         if (Result.isSuccess()) {

@@ -352,6 +352,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));
         }
         List<Location> locations = repository.findAll();
+        locations.remove(oldLocation);
         if (checkNameDuplicates(locations, locationPendingCopyCreateDTO.getName())) {
             return Result.failure(EntityError.sameName(type, locationPendingCopyCreateDTO.getName()));
         }
@@ -453,6 +454,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             return Result.failure(EntityError.nullReference(type));
         }
         List<Location> locations = repository.findAll();
+        locations.remove(locationOptional.get());
         if (checkNameDuplicates(locations, newLocation.getName())) {
             return Result.failure(EntityError.sameName(type, newLocation.getName()));
         }

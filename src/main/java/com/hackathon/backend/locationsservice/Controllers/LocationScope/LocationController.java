@@ -121,6 +121,37 @@ public class LocationController {
         }
     }
 
+    @DeleteMapping("/{location_id}")
+    ResponseEntity<?> delete(@PathVariable(name = "location_id") UUID locationId) {
+        Result<Location, LocationReadDTO> Result = locationService.deleteLocation(locationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @PatchMapping("/{location_id}/status/{status}")
+    public ResponseEntity<?> changeStatus(
+            @PathVariable("location_id") UUID locationId,
+            @PathVariable("status") String status,
+            @RequestBody(required = false) Map<String, Object> body
+    ) {
+        String rejectionReason = null;
+        if (body != null && body.containsKey("rejectionReason")) {
+            rejectionReason = (String) body.get("rejectionReason");
+        }
+
+        Result<Location, LocationReadDTO> result = locationService.changeStatus(locationId, status, rejectionReason);
+
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
+
     @PutMapping("/{location_id}/pending_copy/{pending_copy_id}")
     ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "pending_copy_id") Long pendingCopyId,@RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.update(locationId, pendingCopyId, locationPendingCopyCreateDTO);

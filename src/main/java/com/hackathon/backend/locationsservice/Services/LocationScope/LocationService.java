@@ -239,7 +239,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (isAuthenticated && username != null) {
             UserDTO user = userService.loadWholeUserByUsername(username);
             newLocation.setCreatedBy(user.id());
-            if (isAdmin){
+            if (isAdmin) {
                 newLocation.setStatus(LocationStatusEnum.published);
             }
         }
@@ -488,7 +488,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         oldLocation.setUpdatedBy(currentUserId);
         oldLocation.setDescription(newLocation.getDescription());
         oldLocation.setContacts(newLocation.getContacts());
-        oldLocation.setStatus(newLocation.getStatus());
+        oldLocation.setStatus(LocationStatusEnum.published);
         if (!newLocationTypeOptional.get().equals(oldLocation.getType())) {
             BarrierlessCriteriaGroup oldLocBarrierlessCriteriaGroup = oldLocation.getType().getBarrierlessCriteriaGroup();
             Set<BarrierlessCriteriaType> oldLocbarrierlessCriteriaTypes = oldLocBarrierlessCriteriaGroup.getBarrierlessCriteriaTypes();
@@ -512,7 +512,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         }
         oldLocation.setType(newLocationTypeOptional.get());
         oldLocation.setOrganizationId(newLocation.getOrganizationId());
-        oldLocation.setLastVerifiedAt(newLocation.getLastVerifiedAt());
+        oldLocation.setLastVerifiedAt(LocalDateTime.now());
+        oldLocation.setLastVerifiedBy(currentUserId);
         oldLocation.setWorkingHours(newLocation.getWorkingHours());
         oldLocation.setRejectionReason(newLocation.getRejectionReason());
         oldLocation.setOverallAccessibilityScore(newLocation.getOverallAccessibilityScore());
@@ -786,4 +787,83 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.setEntityDTO(locationTypeMapper.toDto(locationOptional.get().getType()));
         return res;
     }
+
+    public Result<Location, LocationReadDTO> changeStatus(UUID locationId, String status, String rejectionReason) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Location location = locationOptional.get();
+
+        // ✅ Перевірка валідності статусу
+        LocationStatusEnum newStatus;
+        try {
+            newStatus = LocationStatusEnum.valueOf(status.toLowerCase());
+        } catch (IllegalArgumentException e) {
+            return Result.failure(EntityError.invalid("Invalid status: " + status));
+        }
+
+        LocationStatusEnum currentStatus = location.getStatus();
+
+        // ✅ Дозволені переходи:
+        // pending → published | rejected
+        // published → pending
+        // rejected → pending
+        boolean allowedTransition =
+                (currentStatus == LocationStatusEnum.pending && (newStatus == LocationStatusEnum.published || newStatus == LocationStatusEnum.rejected)) ||
+                        (currentStatus == LocationStatusEnum.published && newStatus == LocationStatusEnum.pending) ||
+                        (currentStatus == LocationStatusEnum.rejected && newStatus == LocationStatusEnum.pending);
+
+        if (!allowedTransition) {
+            return Result.failure(EntityError.invalid(
+                    String.format("Cannot change status from %s to %s", currentStatus, newStatus)
+            ));
+        }
+
+        // ✅ Якщо відхилено — потрібна причина
+        if (newStatus == LocationStatusEnum.rejected) {
+            if (rejectionReason == null || rejectionReason.trim().isEmpty()) {
+                return Result.failure(EntityError.invalid("Rejection reason is required for rejected status"));
+            }
+            location.setRejectionReason(rejectionReason.trim());
+        } else {
+            location.setRejectionReason(null);
+        }
+
+        // ✅ Оновлення статусу
+        location.setStatus(newStatus);
+
+        Location savedLocation = repository.save(location);
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = savedLocation;
+        res.entityDTO = mapper.toDto(savedLocation);
+        return res;
+    }
+
+    public Result<Location, LocationReadDTO> deleteLocation(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Location location = locationOptional.get();
+
+        List<LocationPendingCopy> locationPendingCopies = locationPendingCopyRepository.getLocationPendingCopiesByLocation(location);
+
+        locationPendingCopyRepository.deleteAll(locationPendingCopies);
+
+        List<BarrierlessCriteriaCheck> barrierlessCriteriaChecks = barrierlessCriteriaCheckRepository.findAllByLocation_Id(locationId);
+
+        barrierlessCriteriaCheckRepository.deleteAll(barrierlessCriteriaChecks);
+
+        repository.delete(location);
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = location;
+        res.entityDTO = mapper.toDto(location);
+        return res;
+    }
+
 }

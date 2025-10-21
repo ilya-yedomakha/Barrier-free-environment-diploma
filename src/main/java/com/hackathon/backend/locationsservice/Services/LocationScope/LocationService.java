@@ -41,6 +41,7 @@ import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
 import com.hackathon.backend.locationsservice.Services.util.StringSimilarity;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
@@ -593,6 +594,25 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
         return nearbySimilar.stream().map(mapper::toDto).toList();
     }
+
+    public List<LocationReadDTO> findSimilarById(UUID id) {
+        Location current = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + id));
+
+        List<Location> nearbySimilar = repository.findNearbySimilarLocations(
+                current.getCoordinates().getY(),  // lat
+                current.getCoordinates().getX(),  // lng
+                current.getName(),
+                current.getAddress()
+        );
+
+        // 🔹 Відфільтровуємо саму локацію
+        return nearbySimilar.stream()
+                .filter(loc -> !Objects.equals(loc.getId(), id))
+                .map(mapper::toDto)
+                .toList();
+    }
+
 
     public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId) {
         Optional<Location> locationOptional = repository.findById(locationId);

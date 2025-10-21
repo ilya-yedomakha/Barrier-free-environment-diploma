@@ -193,6 +193,22 @@ public class LocationController {
         return ResponseEntity.ok(Map.of("message", "No duplicates found"));
     }
 
+    @GetMapping("/{id}/check-duplicates")
+    public ResponseEntity<?> checkDuplicatesById(@PathVariable UUID id) {
+        List<LocationReadDTO> similar = locationService.findSimilarById(id);
+
+        if (!similar.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of(
+                            "message", "Found similar locations nearby",
+                            "similar", similar
+                    ));
+        }
+
+        return ResponseEntity.ok(Map.of("message", "No duplicates found"));
+    }
+
+
 
     @PostMapping
     ResponseEntity<?> add(@RequestBody LocationCreateDTO locationCreateDTO) {

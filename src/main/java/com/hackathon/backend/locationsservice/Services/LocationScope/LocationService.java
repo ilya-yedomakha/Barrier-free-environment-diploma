@@ -374,7 +374,51 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
 
-        locationPendingCopyRepository.delete(locationPendingCopy);
+        return res;
+
+    }
+
+    public Result<Location, LocationReadDTO> updateByDuplicate(UUID locationId, UUID duplicateId, LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+//        Optional<LocationPendingCopy> locationPendingCopyOptional = locationPendingCopyRepository.findById(locationPendingCopyId);
+//        if (locationPendingCopyOptional.isEmpty()) {
+//            return Result.failure(EntityError.notFound(LocationPendingCopy.class, locationPendingCopyId));
+//        }
+        Optional<Location> duplicateOptional = repository.findById(duplicateId);
+        if (duplicateOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, duplicateId));
+        }
+
+        Location newLocation = locationOptional.get();
+        Location duplLocation = duplicateOptional.get();
+//        if (!oldLocation.getId().equals(locationPendingCopy.getLocation().getId())) {
+//            return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));
+//        }
+        List<Location> locations = repository.findAll();
+        locations.removeAll(Arrays.asList(duplLocation, newLocation));
+        if (checkNameDuplicates(locations, locationPendingCopyCreateDTO.getName())) {
+            return Result.failure(EntityError.sameName(type, locationPendingCopyCreateDTO.getName()));
+        }
+
+        duplLocation.setAddress(locationPendingCopyCreateDTO.getAddress());
+        duplLocation.setName(locationPendingCopyCreateDTO.getName());
+        duplLocation.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
+        duplLocation.setUpdatedBy(locationPendingCopyCreateDTO.getUpdatedBy());
+        duplLocation.setDescription(locationPendingCopyCreateDTO.getDescription());
+        duplLocation.setContacts(locationPendingCopyCreateDTO.getContacts());
+        duplLocation.setStatus(LocationStatusEnum.published);
+
+        duplLocation.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
+        duplLocation.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
+
+        Location savedLocation = repository.save(duplLocation);
+        repository.delete(newLocation);
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = savedLocation;
+        res.entityDTO = mapper.toDto(savedLocation);
 
         return res;
 

@@ -162,6 +162,16 @@ public class LocationController {
         }
     }
 
+    @PutMapping("/{location_id}/duplicate/{duplicate_id}")
+    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "duplicate_id") UUID duplicateId,@RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+        Result<Location, LocationReadDTO> Result = locationService.updateByDuplicate(locationId, duplicateId, locationPendingCopyCreateDTO);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
     @PostMapping("/to_pending/{location_id}/")
     ResponseEntity<?> CreatePendingLocation(@PathVariable(name = "location_id") UUID locationId, @RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.createPendingCopy(locationId, locationPendingCopyCreateDTO);

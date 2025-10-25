@@ -153,7 +153,7 @@ public class LocationController {
 
 
     @PutMapping("/{location_id}/pending_copy/{pending_copy_id}")
-    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "pending_copy_id") Long pendingCopyId,@RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "pending_copy_id") Long pendingCopyId, @RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.update(locationId, pendingCopyId, locationPendingCopyCreateDTO);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
@@ -163,7 +163,7 @@ public class LocationController {
     }
 
     @PutMapping("/{location_id}/duplicate/{duplicate_id}")
-    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "duplicate_id") UUID duplicateId,@RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+    ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "duplicate_id") UUID duplicateId, @RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.updateByDuplicate(locationId, duplicateId, locationPendingCopyCreateDTO);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTO());
@@ -219,7 +219,6 @@ public class LocationController {
     }
 
 
-
     @PostMapping
     ResponseEntity<?> add(@RequestBody LocationCreateDTO locationCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.add(locationCreateDTO);
@@ -239,6 +238,28 @@ public class LocationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
         }
     }
+
+    @GetMapping("/me/")
+    ResponseEntity<?> getUserModifiedLocations() {
+        Result<Location, LocationReadDTO> Result = locationService.getUserModifiedLocations();
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/me/{location_id}/pending")
+    ResponseEntity<?> getPendingLocationOfUserByLocationId(@PathVariable(name = "location_id") UUID locationId) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getPendingLocationOfUserByLocationId(locationId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+
 
     @GetMapping("/{location_id}/pending-locations/")
     ResponseEntity<?> GetPendingLocationsByLocationId(@PathVariable(name = "location_id") UUID locationId) {

@@ -33,8 +33,7 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getPassword(),
-                user.getRole().name() // або просто getRole() якщо це String
+                user.getRole().name()
         );
     }
 

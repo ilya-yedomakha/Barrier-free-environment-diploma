@@ -4,6 +4,8 @@ import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.UserError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
+import com.hackathon.backend.locationsservice.Security.DTO.RoleUpdateRequest;
+import com.hackathon.backend.locationsservice.Security.Domain.Role;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
 import com.hackathon.backend.locationsservice.Security.Repositories.UserRepository;
 import org.springframework.security.core.Authentication;
@@ -126,5 +128,24 @@ public class UserServiceImpl implements UserService {
                     user.getRole().name()));
             return res;
         } else return Result.failure(UserError.notFound(username));
+    }
+
+    public Result<User, UserDTO> updateUserRole(String username, RoleUpdateRequest role) {
+        Optional<User> entity = userRepository.findByUsername(username);
+
+        if (entity.isPresent()){
+            Result<User, UserDTO> res = Result.success();
+            User user = entity.get();
+            user.setRole(Role.valueOf(role.getRole()));
+            User savedUser = userRepository.save(user);
+            res.setEntity(savedUser);
+            res.setEntityDTO(new UserDTO(
+                    savedUser.getId(),
+                    savedUser.getUsername(),
+                    savedUser.getEmail(),
+                    savedUser.getRole().name()));
+            return res;
+        } else return Result.failure(UserError.notFound(username));
+
     }
 }

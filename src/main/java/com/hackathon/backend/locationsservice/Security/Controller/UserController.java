@@ -2,7 +2,9 @@ package com.hackathon.backend.locationsservice.Security.Controller;
 
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
 import com.hackathon.backend.locationsservice.Result.Result;
+import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserCreateDTO;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
+import com.hackathon.backend.locationsservice.Security.DTO.RegistrationRequestDto;
 import com.hackathon.backend.locationsservice.Security.DTO.RoleUpdateRequest;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
 import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
@@ -104,6 +106,24 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
         }
+    }
+
+    @PostMapping("/")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<String> register(
+            @RequestBody UserCreateDTO userCreateDTO) {
+
+        if(userService.existsByUsername(userCreateDTO.username())) {
+            return ResponseEntity.badRequest().body("The username is already taken");
+        }
+
+        if(userService.existsByEmail(userCreateDTO.email())) {
+            return ResponseEntity.badRequest().body("Email is already taken");
+        }
+
+        userService.registerUser(userCreateDTO);
+
+        return ResponseEntity.ok("Registration was successfull");
     }
 
 }

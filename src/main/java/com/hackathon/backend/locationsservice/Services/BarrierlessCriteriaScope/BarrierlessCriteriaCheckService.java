@@ -18,9 +18,14 @@ import com.hackathon.backend.locationsservice.Result.EntityErrors.CheckError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.Result;
+import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
 import com.hackathon.backend.locationsservice.Security.Repositories.UserRepository;
+import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -35,6 +40,7 @@ public class BarrierlessCriteriaCheckService{
     private final UserRepository userRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
     private final BarrierlessCriteriaCheckMapper barrierlessCriteriaCheckMapper;
+    private final UserServiceImpl userService;
 
 
     public Result<BarrierlessCriteriaCheck, BarrierlessCriteriaCheckReadDTO> add(BarrierlessCriteriaCheckCreateDTO barrierlessCriteriaCheckCreateDTO) {
@@ -131,10 +137,27 @@ public class BarrierlessCriteriaCheckService{
         for (BarrierlessCriteriaCheckCreateDTO barrierlessCriteriaCheckCreateDTO : checkList){
             UUID barrierlessCriteriaId = barrierlessCriteriaCheckCreateDTO.getBarrierlessCriteriaId();
             UUID locationId = barrierlessCriteriaCheckCreateDTO.getLocationId();
-            UUID userId = barrierlessCriteriaCheckCreateDTO.getUserId();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = null;
+            UUID userId = null;
+            boolean isAuthenticated = false;
+
+            if (authentication != null && authentication.isAuthenticated()
+                    && authentication.getPrincipal() instanceof UserDetails userDetails) {
+                username = userDetails.getUsername();
+                isAuthenticated = true;
+            }
+            if (isAuthenticated && username != null) {
+                UserDTO user = userService.loadWholeUserByUsername(username);
+                userId = user.id();
+            }
+
+            final UUID currentUserId = userId;
+            barrierlessCriteriaCheckCreateDTO.setCreatedBy(currentUserId);
+            barrierlessCriteriaCheckCreateDTO.setUserId(currentUserId);
             Optional<BarrierlessCriteria> barrierlessCriteriaOptional = barrierlessCriteriaRepository.findById(barrierlessCriteriaId);
             Optional<Location> locationOptional = locationRepository.findById(locationId);
-            Optional<User> userOptional = userRepository.findById(userId);
+            Optional<User> userOptional = userRepository.findById(currentUserId);
 
             if (barrierlessCriteriaOptional.isEmpty()) {
                 return Result.failure(EntityError.notFound(BarrierlessCriteria.class,barrierlessCriteriaCheckCreateDTO.getBarrierlessCriteriaId()));
@@ -156,7 +179,7 @@ public class BarrierlessCriteriaCheckService{
             if (!criteriaLocationTypes.contains(locationType)){
                 return Result.failure(CheckError.mismatch(location.getType().getId(),barrierlessCriteriaId));
             }
-            BarrierlessCriteriaCheckEmbeddedId id = new BarrierlessCriteriaCheckEmbeddedId(locationId,barrierlessCriteriaId,userId);
+            BarrierlessCriteriaCheckEmbeddedId id = new BarrierlessCriteriaCheckEmbeddedId(locationId,barrierlessCriteriaId,currentUserId);
 
             newBarrierlessCriteriaCheck.setBarrierlessCriteriaCheckId(id);
             barrierlessCriteriaChecks.add(newBarrierlessCriteriaCheck);

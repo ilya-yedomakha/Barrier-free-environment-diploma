@@ -461,6 +461,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         }
 
         List<Location> locations = repository.findAll();
+        Location location = locationOptional.get();
+        locations.remove(location);
         if (checkNameDuplicates(locations, locationPendingCopy.getName())) {
             return Result.failure(EntityError.sameName(LocationPendingCopy.class, locationPendingCopy.getName()));
         }

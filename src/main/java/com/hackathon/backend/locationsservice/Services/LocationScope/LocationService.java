@@ -13,6 +13,7 @@ import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteri
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.RejectionReason;
 import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
@@ -1045,6 +1046,75 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
         res.entity = userLocationPendingCopy;
         res.entityDTO = locationPendingCopyMapper.toDto(userLocationPendingCopy);
+        return res;
+
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> rejectPendingLocation(Long pendingId, RejectionReason rejectionReason) {
+        Optional<LocationPendingCopy> locationOptional = locationPendingCopyRepository.findById(pendingId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(LocationPendingCopy.class, pendingId));
+        }
+
+        LocationPendingCopy locationPendingCopy = locationOptional.get();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
+        locationPendingCopy.setRejectedBy(currentUserId);
+        locationPendingCopy.setStatus(LocationStatusEnum.rejected);
+        locationPendingCopy.setRejectedAt(LocalDateTime.now());
+        locationPendingCopy.setRejectionReason(rejectionReason.rejectionReason());
+
+        LocationPendingCopy savedLocationPendingCopy = locationPendingCopyRepository.save(locationPendingCopy);
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.entity = savedLocationPendingCopy;
+        res.entityDTO = locationPendingCopyMapper.toDto(savedLocationPendingCopy);
+        return res;
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> getUserPendingLocationsByLocationId(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
+
+        Location location = locationOptional.get();
+        List<LocationPendingCopy> copies = locationPendingCopyRepository.getLocationPendingCopiesByLocation(location);
+        copies.removeIf(copy -> !copy.getUpdatedBy().equals(currentUserId));
+
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.entities = copies;
+        res.entityDTOs = copies.stream().map(locationPendingCopyMapper::toDto).toList();
         return res;
 
     }

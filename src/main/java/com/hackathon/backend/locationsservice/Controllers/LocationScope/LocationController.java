@@ -6,6 +6,7 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationS
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.RejectionReason;
 import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
@@ -21,6 +22,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -182,6 +184,17 @@ public class LocationController {
         }
     }
 
+    @PatchMapping("/pending/{pending_id}/")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    ResponseEntity<?> RejectPending(@PathVariable(name = "pending_id") Long pendingId, @RequestBody RejectionReason rejectionReason) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.rejectPendingLocation(pendingId, rejectionReason);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
     @PostMapping("/calculate/barrierless-score")
     ResponseEntity<?> calculateBarrierlessScore() {
         locationService.calculateBarrierlessScore();
@@ -232,6 +245,16 @@ public class LocationController {
     @GetMapping("/me/pending-locations/")
     ResponseEntity<?> getUserPendingLocations() {
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocations();
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/me/{location_id}/pending-locations/")
+    ResponseEntity<?> getUserPendingLocationsByLocationId(@PathVariable(name = "location_id") UUID locationId) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocationsByLocationId(locationId);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTOs());
         } else {

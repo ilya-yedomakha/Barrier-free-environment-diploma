@@ -67,6 +67,13 @@ public class LocationPendingCopy{
     @Column(name = "status", nullable = false)
     private LocationStatusEnum status = LocationStatusEnum.pending;
 
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    private LocalDateTime rejectedAt;
+
+    private UUID rejectedBy;
+
 
     @NotNull
     @Column(nullable = false)

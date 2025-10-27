@@ -1,11 +1,8 @@
 package com.hackathon.backend.locationsservice.Security.DTO.Domain;
 
-
-import java.util.UUID;
-
-public record UserDTO(
-        UUID id,
+public record UserCreateDTO(
         String username,
+        String password,
         String email,
         String role
 ) {

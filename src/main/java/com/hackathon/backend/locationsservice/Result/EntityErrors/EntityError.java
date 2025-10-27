@@ -48,5 +48,12 @@ public class EntityError {
                 type.getSimpleName() + " with description: " + description + " already exists"
         );
     }
+
+    public static Error invalid(String s) {
+        return new Error(
+                "Location.InvalidStatus",
+                s
+        );
+    }
 }
 

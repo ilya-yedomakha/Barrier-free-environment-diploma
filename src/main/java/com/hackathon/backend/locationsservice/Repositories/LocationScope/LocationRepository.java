@@ -41,4 +41,7 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
             @Param("address") String address
     );
 
+    List<Location> findAllByCreatedBy(UUID userId);
+
+    List<Location> findAllByUpdatedBy(UUID userId);
 }

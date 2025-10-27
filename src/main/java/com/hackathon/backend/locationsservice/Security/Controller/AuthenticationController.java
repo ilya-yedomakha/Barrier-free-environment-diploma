@@ -33,7 +33,7 @@ public class AuthenticationController {
         }
 
         if(userService.existsByEmail(registrationDto.getEmail())) {
-            return ResponseEntity.badRequest().body("Email уже занят");
+            return ResponseEntity.badRequest().body("Email is already taken");
         }
 
         authenticationService.register(registrationDto);

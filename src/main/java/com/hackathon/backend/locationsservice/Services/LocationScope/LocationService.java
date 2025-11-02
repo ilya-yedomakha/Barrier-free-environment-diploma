@@ -496,7 +496,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         locationPendingCopy.setContacts(locationPendingCopyCreateDTO.getContacts());
         locationPendingCopy.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
         locationPendingCopy.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
-        locationPendingCopy.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
+        locationPendingCopy.setUpdatedAt(LocalDateTime.now());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = null;
         UUID userId = null;

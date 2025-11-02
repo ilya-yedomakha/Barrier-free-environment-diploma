@@ -427,6 +427,27 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             return Result.failure(EntityError.sameName(type, locationPendingCopyCreateDTO.getName()));
         }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        boolean isAdmin = false;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            if (isAdmin) {
+                duplLocation.setLastVerifiedAt(LocalDateTime.now());
+                duplLocation.setLastVerifiedBy(user.id());
+            }
+        }
+
         duplLocation.setAddress(locationPendingCopyCreateDTO.getAddress());
         duplLocation.setName(locationPendingCopyCreateDTO.getName());
         duplLocation.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
@@ -635,15 +656,22 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         String username = null;
         UUID userId = null;
         boolean isAuthenticated = false;
+        boolean isAdmin = false;
 
         if (authentication != null && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof UserDetails userDetails) {
             username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
             isAuthenticated = true;
         }
         if (isAuthenticated && username != null) {
             UserDTO user = userService.loadWholeUserByUsername(username);
             userId = user.id();
+            if (isAdmin) {
+                oldLocation.setLastVerifiedAt(LocalDateTime.now());
+                oldLocation.setLastVerifiedBy(userId);
+            }
         }
 
         final UUID currentUserId = userId;
@@ -1016,6 +1044,28 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             location.setRejectionReason(rejectionReason.trim());
         } else {
             location.setRejectionReason(null);
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+        boolean isAdmin = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+            if (isAdmin) {
+                location.setLastVerifiedAt(LocalDateTime.now());
+                location.setLastVerifiedBy(userId);
+            }
         }
 
         // ✅ Оновлення статусу

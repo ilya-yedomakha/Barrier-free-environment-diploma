@@ -28,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -153,8 +154,9 @@ public class BarrierlessCriteriaCheckService{
             }
 
             final UUID currentUserId = userId;
-            barrierlessCriteriaCheckCreateDTO.setCreatedBy(currentUserId);
-            barrierlessCriteriaCheckCreateDTO.setUserId(currentUserId);
+
+            barrierlessCriteriaCheckCreateDTO.setUpdatedAt(LocalDateTime.now());
+
             Optional<BarrierlessCriteria> barrierlessCriteriaOptional = barrierlessCriteriaRepository.findById(barrierlessCriteriaId);
             Optional<Location> locationOptional = locationRepository.findById(locationId);
             Optional<User> userOptional = userRepository.findById(currentUserId);
@@ -168,6 +170,21 @@ public class BarrierlessCriteriaCheckService{
             if (userOptional.isEmpty()) {
                 return Result.failure(EntityError.notFound(User.class,barrierlessCriteriaCheckCreateDTO.getUserId()));
             }
+
+            BarrierlessCriteriaCheckEmbeddedId id = new BarrierlessCriteriaCheckEmbeddedId(locationId,barrierlessCriteriaId,currentUserId);
+
+            Optional<BarrierlessCriteriaCheck> oldBarrierlessCriteriaCheck = barrierlessCriteriaCheckRepository.findById(id);
+
+            if (oldBarrierlessCriteriaCheck.isPresent()) {
+                barrierlessCriteriaCheckCreateDTO.setUserId(oldBarrierlessCriteriaCheck.get().getUser().getId());
+                barrierlessCriteriaCheckCreateDTO.setCreatedBy(oldBarrierlessCriteriaCheck.get().getCreatedBy());
+                barrierlessCriteriaCheckCreateDTO.setCreatedAt(oldBarrierlessCriteriaCheck.get().getCreatedAt());
+            } else {
+                barrierlessCriteriaCheckCreateDTO.setCreatedBy(currentUserId);
+                barrierlessCriteriaCheckCreateDTO.setCreatedAt((LocalDateTime.now()));
+                barrierlessCriteriaCheckCreateDTO.setUserId(currentUserId);
+            }
+
             BarrierlessCriteriaCheck newBarrierlessCriteriaCheck = barrierlessCriteriaCheckMapper.toEntity(barrierlessCriteriaCheckCreateDTO);
             if (newBarrierlessCriteriaCheck == null) {
                 return Result.failure(EntityError.nullReference(BarrierlessCriteriaCheck.class));
@@ -179,7 +196,7 @@ public class BarrierlessCriteriaCheckService{
             if (!criteriaLocationTypes.contains(locationType)){
                 return Result.failure(CheckError.mismatch(location.getType().getId(),barrierlessCriteriaId));
             }
-            BarrierlessCriteriaCheckEmbeddedId id = new BarrierlessCriteriaCheckEmbeddedId(locationId,barrierlessCriteriaId,currentUserId);
+
 
             newBarrierlessCriteriaCheck.setBarrierlessCriteriaCheckId(id);
             barrierlessCriteriaChecks.add(newBarrierlessCriteriaCheck);

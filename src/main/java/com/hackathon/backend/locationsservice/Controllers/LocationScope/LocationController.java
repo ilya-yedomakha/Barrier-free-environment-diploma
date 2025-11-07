@@ -133,6 +133,16 @@ public class LocationController {
         }
     }
 
+    @DeleteMapping("/pending_copy/{pending_id}")
+    ResponseEntity<?> delete(@PathVariable(name = "pending_id") Long pendingId) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.deletePending(pendingId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
     @PatchMapping("/{location_id}/status/{status}")
     public ResponseEntity<?> changeStatus(
             @PathVariable("location_id") UUID locationId,
@@ -252,6 +262,16 @@ public class LocationController {
         }
     }
 
+    @GetMapping("/user/{username}/pending-locations/")
+    ResponseEntity<?> getUserPendingLocationsByUsername(@PathVariable(name = "username") String username) {
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocationsByUsername(username);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
     @GetMapping("/me/{location_id}/pending-locations/")
     ResponseEntity<?> getUserPendingLocationsByLocationId(@PathVariable(name = "location_id") UUID locationId) {
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocationsByLocationId(locationId);
@@ -265,6 +285,17 @@ public class LocationController {
     @GetMapping("/me/")
     ResponseEntity<?> getUserModifiedLocations() {
         Result<Location, LocationReadDTO> Result = locationService.getUserModifiedLocations();
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/modified/user/{username}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    ResponseEntity<?> getUserModifiedLocationsByUsername(@PathVariable(name = "username") String username) {
+        Result<Location, LocationReadDTO> Result = locationService.getUserModifiedLocationsByUsername(username);
         if (Result.isSuccess()) {
             return ResponseEntity.ok(Result.getEntityDTOs());
         } else {

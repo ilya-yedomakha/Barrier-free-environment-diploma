@@ -34,6 +34,7 @@ import com.hackathon.backend.locationsservice.Repositories.LocationScope.Locatio
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
+import com.hackathon.backend.locationsservice.Result.EntityErrors.UserError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
@@ -426,6 +427,27 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             return Result.failure(EntityError.sameName(type, locationPendingCopyCreateDTO.getName()));
         }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        boolean isAdmin = false;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            if (isAdmin) {
+                duplLocation.setLastVerifiedAt(LocalDateTime.now());
+                duplLocation.setLastVerifiedBy(user.id());
+            }
+        }
+
         duplLocation.setAddress(locationPendingCopyCreateDTO.getAddress());
         duplLocation.setName(locationPendingCopyCreateDTO.getName());
         duplLocation.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
@@ -474,7 +496,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         locationPendingCopy.setContacts(locationPendingCopyCreateDTO.getContacts());
         locationPendingCopy.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
         locationPendingCopy.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
-        locationPendingCopy.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
+        locationPendingCopy.setUpdatedAt(LocalDateTime.now());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = null;
         UUID userId = null;
@@ -561,6 +583,49 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
     }
 
+    public Result<Location, LocationReadDTO> getUserModifiedLocationsByUsername(String username){
+
+        UserDTO user = userService.loadWholeUserByUsername(username);
+
+        if (user == null){
+            return Result.failure(UserError.notFound(username));
+        }
+
+        final UUID currentUserId = user.id();
+
+
+        List<Location> locationsCreatedBy = repository.findAllByCreatedBy(currentUserId);
+        List<Location> locationsUpdatedBy = repository.findAllByUpdatedBy(currentUserId);
+
+        List<BarrierlessCriteriaCheck> barrierlessCriteriaChecksOfUser = barrierlessCriteriaCheckRepository.findAllByUser_Id(currentUserId);
+
+        List<Location> locationsByChecks = new ArrayList<>();
+
+        for (BarrierlessCriteriaCheck check : barrierlessCriteriaChecksOfUser){
+            locationsByChecks.add(check.getLocation());
+        }
+
+        List<LocationPendingCopy> pendingLocationsOfUser = locationPendingCopyRepository.getLocationPendingCopiesByUpdatedBy(currentUserId);
+        List<Location> locationsByPendings = new ArrayList<>();
+
+        for (LocationPendingCopy locationPendingCopy : pendingLocationsOfUser){
+            locationsByPendings.add(locationPendingCopy.getLocation());
+        }
+
+        HashSet<Location> combinedLocations = new HashSet<>();
+        combinedLocations.addAll(locationsCreatedBy);
+        combinedLocations.addAll(locationsUpdatedBy);
+        combinedLocations.addAll(locationsByPendings);
+        combinedLocations.addAll(locationsByChecks);
+
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entities = combinedLocations.stream().toList();
+        res.entityDTOs = res.entities.stream().map(mapper::toDto).toList();
+        return res;
+
+    }
+
     public Result<Location, LocationReadDTO> update(UUID locationId, LocationCreateDTO locationCreateDTO) {
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
@@ -591,15 +656,22 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         String username = null;
         UUID userId = null;
         boolean isAuthenticated = false;
+        boolean isAdmin = false;
 
         if (authentication != null && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof UserDetails userDetails) {
             username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
             isAuthenticated = true;
         }
         if (isAuthenticated && username != null) {
             UserDTO user = userService.loadWholeUserByUsername(username);
             userId = user.id();
+            if (isAdmin) {
+                oldLocation.setLastVerifiedAt(LocalDateTime.now());
+                oldLocation.setLastVerifiedBy(userId);
+            }
         }
 
         final UUID currentUserId = userId;
@@ -974,6 +1046,28 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             location.setRejectionReason(null);
         }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+        boolean isAdmin = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+            if (isAdmin) {
+                location.setLastVerifiedAt(LocalDateTime.now());
+                location.setLastVerifiedBy(userId);
+            }
+        }
+
         // ✅ Оновлення статусу
         location.setStatus(newStatus);
 
@@ -1117,5 +1211,36 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entityDTOs = copies.stream().map(locationPendingCopyMapper::toDto).toList();
         return res;
 
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> deletePending(Long pendingId) {
+        Optional<LocationPendingCopy> locationPendingCopyOptional = locationPendingCopyRepository.findById(pendingId);
+        if (locationPendingCopyOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(LocationPendingCopy.class, pendingId));
+        }
+
+        LocationPendingCopy locationPendingCopy = locationPendingCopyOptional.get();
+
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        locationPendingCopyRepository.delete(locationPendingCopy);
+        res.entity = locationPendingCopy;
+        res.entityDTO = locationPendingCopyMapper.toDto(locationPendingCopy);
+        return res;
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> getUserPendingLocationsByUsername(String username) {
+        UserDTO user = userService.loadWholeUserByUsername(username);
+
+        if (user == null){
+            return Result.failure(UserError.notFound(username));
+        }
+
+        final UUID currentUserId = user.id();
+
+        List<LocationPendingCopy> entities = locationPendingCopyRepository.getLocationPendingCopiesByUpdatedBy(currentUserId);
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.setEntities(entities);
+        res.setEntityDTOs(entities.stream().map(locationPendingCopyMapper::toDto).toList());
+        return res;
     }
 }

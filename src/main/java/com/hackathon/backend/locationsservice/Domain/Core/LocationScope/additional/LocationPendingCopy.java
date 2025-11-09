@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Location_pending_copies")
+@Table(name = "Location_pending_copies",schema = "geo_score_schema")
 @Getter
 @Setter
 @AllArgsConstructor

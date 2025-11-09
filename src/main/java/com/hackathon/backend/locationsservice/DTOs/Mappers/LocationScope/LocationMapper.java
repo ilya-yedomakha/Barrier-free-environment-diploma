@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LocationMapper implements BaseMapper<Location, LocationReadDTO, LocationCreateDTO> {
 
-    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 5564);
     private final LocationTypeRepository locationTypeRepository;
 
     @Override

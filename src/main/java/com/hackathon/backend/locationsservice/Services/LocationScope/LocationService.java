@@ -162,7 +162,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
             GeometryFactory geometryFactory = new GeometryFactory();
             Point point = geometryFactory.createPoint(new Coordinate(lng, lat));
-            point.setSRID(4326);
+            point.setSRID(5564);
 
             Expression<Double> distanceExpr = cb.function("ST_Distance", Double.class,
                     locationRoot.get("coordinates"), cb.literal(point));

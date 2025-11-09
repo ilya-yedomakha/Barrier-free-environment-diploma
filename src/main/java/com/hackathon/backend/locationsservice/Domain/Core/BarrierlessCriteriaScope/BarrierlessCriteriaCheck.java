@@ -13,6 +13,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@Table(schema = "geo_score_schema")
 public class BarrierlessCriteriaCheck {
 
     @EmbeddedId

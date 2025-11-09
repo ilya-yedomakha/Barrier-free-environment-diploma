@@ -18,11 +18,11 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
 
     @Query(value = """
     SELECT *
-    FROM locations l
+    FROM geo_score_schema.locations l
     WHERE ST_DWithin(
               l.coordinates,
-              ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
-              100
+              ST_SetSRID(ST_MakePoint(:lng, :lat), 5564),
+              0.0009009
           )
       AND (
           similarity(LOWER(l.name), LOWER(:name)) > 0.3

@@ -252,6 +252,16 @@ public class LocationController {
         }
     }
 
+    @PostMapping("/isValid")
+    ResponseEntity<?> isValid(@RequestBody LocationCreateDTO locationCreateDTO) {
+        Result<Location, LocationReadDTO> Result = locationService.isValid(locationCreateDTO);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.getError());
+        }
+    }
+
     @GetMapping("/me/pending-locations/")
     ResponseEntity<?> getUserPendingLocations() {
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocations();

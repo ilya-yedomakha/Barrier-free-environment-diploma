@@ -46,6 +46,7 @@ public class LocationMapper implements BaseMapper<Location, LocationReadDTO, Loc
         location.setUpdatedAt(dto.updatedAt);
         location.setLastVerifiedAt(dto.lastVerifiedAt);
         location.setRejectionReason(dto.rejectionReason);
+        location.setImageServiceId(dto.getImageServiceId());
 
         return location;
     }
@@ -69,6 +70,7 @@ public class LocationMapper implements BaseMapper<Location, LocationReadDTO, Loc
         locationReadDTO.setUpdatedAt(location.getUpdatedAt());
         locationReadDTO.setLastVerifiedAt(location.getLastVerifiedAt());
         locationReadDTO.setRejectionReason(location.getRejectionReason());
+        locationReadDTO.setImageServiceId(location.getImageServiceId());
 
         return locationReadDTO;
     }

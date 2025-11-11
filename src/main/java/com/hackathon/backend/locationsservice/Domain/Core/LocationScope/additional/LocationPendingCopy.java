@@ -82,4 +82,8 @@ public class LocationPendingCopy{
     @NotNull
     @Column(nullable = false)
     private UUID updatedBy;
+
+    //nullable = false
+    @Column(name = "image_service_id")
+    private UUID imageServiceId;
 }

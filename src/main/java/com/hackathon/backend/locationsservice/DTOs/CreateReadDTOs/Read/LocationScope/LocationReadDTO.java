@@ -5,6 +5,7 @@ import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -54,4 +55,7 @@ public class LocationReadDTO extends BaseRegularReadDTO {
     public LocalDateTime lastVerifiedAt;
 
     public String rejectionReason;
+
+
+    private UUID imageServiceId;
 }

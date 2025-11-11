@@ -99,5 +99,9 @@ public class Location extends NamedEntity {
 
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;
+
+    //nullable = false
+    @Column(name = "image_service_id")
+    private UUID imageServiceId;
 }
 

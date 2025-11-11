@@ -64,4 +64,6 @@ public class LocationPendingCopyCreateDTO extends BaseRegularCreateDTO {
 
     private UUID rejectedBy;
 
+    private UUID imageServiceId;
+
 }

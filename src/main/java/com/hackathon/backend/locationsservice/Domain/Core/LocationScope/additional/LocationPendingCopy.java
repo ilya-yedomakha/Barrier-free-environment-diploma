@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Location_pending_copies")
+@Table(name = "Location_pending_copies",schema = "geo_score_schema")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -82,4 +82,8 @@ public class LocationPendingCopy{
     @NotNull
     @Column(nullable = false)
     private UUID updatedBy;
+
+    //nullable = false
+    @Column(name = "image_service_id")
+    private UUID imageServiceId;
 }

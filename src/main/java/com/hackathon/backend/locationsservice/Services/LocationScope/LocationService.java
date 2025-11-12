@@ -162,7 +162,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
             GeometryFactory geometryFactory = new GeometryFactory();
             Point point = geometryFactory.createPoint(new Coordinate(lng, lat));
-            point.setSRID(4326);
+            point.setSRID(5564);
 
             Expression<Double> distanceExpr = cb.function("ST_Distance", Double.class,
                     locationRoot.get("coordinates"), cb.literal(point));
@@ -295,6 +295,59 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Result<Location, LocationReadDTO> res = Result.success();
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
+
+        return res;
+
+    }
+
+    public Result<Location, LocationReadDTO> isValid(LocationCreateDTO locationCreateDTO) {
+        Optional<LocationType> locationType = locationTypeRepository.findById(locationCreateDTO.getType());
+        if (locationType.isEmpty()) {
+            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class, locationCreateDTO.getType()));
+        }
+        Location newLocation = mapper.toEntity(locationCreateDTO);
+        if (newLocation == null) {
+            return Result.failure(EntityError.nullReference(type));
+        }
+        List<Location> locations = repository.findAll();
+        if (checkNameDuplicates(locations, newLocation.getName())) {
+            return Result.failure(EntityError.sameName(type, newLocation.getName()));
+        }
+
+        for (Location location : locations) {
+            if (location.getCoordinates().equals(newLocation.getCoordinates())) {
+                return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));
+            }
+        }
+
+        WorkingHours wh = newLocation.getWorkingHours();
+        if (wh != null) {
+            boolean invalidHours = Arrays.stream(WorkingHours.class.getDeclaredFields())
+                    .filter(f -> f.getType().equals(WorkingHours.DayHours.class))
+                    .map(f -> {
+                        try {
+                            f.setAccessible(true);
+                            return (WorkingHours.DayHours) f.get(wh);
+                        } catch (IllegalAccessException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .anyMatch(day -> {
+                        boolean hasOpen = day.getOpen() != null && !day.getOpen().isBlank();
+                        boolean hasClose = day.getClose() != null && !day.getClose().isBlank();
+                        return hasOpen ^ hasClose;
+                    });
+
+            if (invalidHours) {
+                return Result.failure(LocationError.invalidWorkingHours());
+            }
+        }
+
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = newLocation;
+        res.entityDTO = mapper.toDto(newLocation);
 
         return res;
 

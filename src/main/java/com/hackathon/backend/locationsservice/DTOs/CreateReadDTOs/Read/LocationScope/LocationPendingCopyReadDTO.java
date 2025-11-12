@@ -52,4 +52,6 @@ public class LocationPendingCopyReadDTO {
     private LocalDateTime updatedAt;
 
     private UUID updatedBy;
+
+    private UUID imageServiceId;
 }

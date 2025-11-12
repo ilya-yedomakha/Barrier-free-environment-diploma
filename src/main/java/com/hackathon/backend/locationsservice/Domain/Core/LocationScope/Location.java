@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Locations")
+@Table(name = "Locations",schema = "geo_score_schema")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -38,7 +38,7 @@ public class Location extends NamedEntity {
     private String address;
 
     @NotNull
-    @Column(columnDefinition = "geometry(Point,4326)", nullable = false)
+    @Column(columnDefinition = "geometry(Point,5564)", nullable = false)
     private Point coordinates;
 
 
@@ -99,5 +99,9 @@ public class Location extends NamedEntity {
 
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;
+
+    //nullable = false
+    @Column(name = "image_service_id")
+    private UUID imageServiceId;
 }
 

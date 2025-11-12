@@ -17,7 +17,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "verifications")
+@Table(name = "verifications",schema = "geo_score_schema")
 public class Verification {
 
     @Id

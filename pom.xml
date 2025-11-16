@@ -133,28 +133,28 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-main</artifactId>
-            <version>30.0</version>
+            <version>33.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-referencing</artifactId>
-            <version>30.0</version>
+            <version>33.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-epsg-hsql</artifactId>
-            <version>30.0</version>
+            <version>33.1</version>
         </dependency>
     </dependencies>
 
 
     <repositories>
         <repository>
-            <id>osgeo</id>
-            <name>OSGeo Release Repository</name>
-            <url>https://download.osgeo.org/webdav/geotools/</url>
+            <id>geotools-releases</id>
+            <name>GeoTools Releases Repository</name>
+            <url>https://repo.osgeo.org/repository/geotools-releases/</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -163,6 +163,7 @@
             </releases>
         </repository>
     </repositories>
+
 
 
     <build>

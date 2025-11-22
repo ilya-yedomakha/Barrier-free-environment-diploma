@@ -50,8 +50,10 @@ public class ModerationTextResultListener {
                                 uuidList.get(0),uuidList.get(1),uuidList.get(2)).orElse(null);
 
 
-                if (check != null && response.getResult().getCategory() == ModerationCategory.SAFE) {
-                    //тут можлива логіка видалення чи зміни статусу
+                if (check != null && response.getResult().getCategory() != ModerationCategory.SAFE &&
+                        response.getResult().getCategory() != ModerationCategory.UNKNOWN) {
+
+                    barrierlessCriteriaCheckRepository.delete(check);
                 }
             }
             case COMMENT -> {

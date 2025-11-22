@@ -74,19 +74,17 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final LocationPendingCopyRepository locationPendingCopyRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
     private final UserServiceImpl userService;
-    private final LocationCreationEventPub locationCreationEventPub;
     private final ModerationTextEventPub moderationTextEventPub;
 
-    LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
-                    LocationPendingCopyMapper locationPendingCopyMapper, LocationTypeMapper locationTypeMapper, LocationPendingCopyRepository locationPendingCopyRepository,
-                    LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService) {
-                    LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository,
+    LocationService(LocationRepository locationRepository, LocationMapper locationMapper,
+                    LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
+                    LocationPendingCopyMapper locationPendingCopyMapper, LocationTypeMapper locationTypeMapper,
+                    LocationPendingCopyRepository locationPendingCopyRepository,
                     LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService,
-                    LocationCreationEventPub locationCreationEventPub,ModerationTextEventPub moderationTextEventPub) {
+                    ModerationTextEventPub moderationTextEventPub) {
 
         super(locationRepository, Location.class, locationMapper);
         this.locationTypeRepository = locationTypeRepository;
-        this.locationCreationEventPub = locationCreationEventPub;
         this.barrierlessCriteriaCheckRepository = barrierlessCriteriaCheckRepository;
         this.locationPendingCopyMapper = locationPendingCopyMapper;
         this.locationTypeMapper = locationTypeMapper;

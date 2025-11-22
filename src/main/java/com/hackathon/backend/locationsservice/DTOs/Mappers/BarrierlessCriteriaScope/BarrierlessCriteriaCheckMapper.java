@@ -33,6 +33,7 @@ public class BarrierlessCriteriaCheckMapper implements BaseMapper<BarrierlessCri
         barrierlessCriteriaCheck.setUpdatedAt(dto.updatedAt);
         barrierlessCriteriaCheck.setBarrierFreeRating(dto.getBarrierFreeRating());
         barrierlessCriteriaCheck.setHasIssue(dto.isHasIssue());
+        barrierlessCriteriaCheck.setImageServiceId(dto.getImageServiceId());
 
         return barrierlessCriteriaCheck;
     }
@@ -49,6 +50,8 @@ public class BarrierlessCriteriaCheckMapper implements BaseMapper<BarrierlessCri
         barrierlessCriteriaCheckReadDTO.setUpdatedAt(entity.getUpdatedAt());
         barrierlessCriteriaCheckReadDTO.setBarrierFreeRating(entity.getBarrierFreeRating());
         barrierlessCriteriaCheckReadDTO.setHasIssue(entity.isHasIssue());
+        barrierlessCriteriaCheckReadDTO.setImageServiceId(entity.getImageServiceId());
+
         return barrierlessCriteriaCheckReadDTO;
     }
 }

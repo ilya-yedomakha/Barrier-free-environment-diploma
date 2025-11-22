@@ -11,5 +11,7 @@ public record BarrierlessCriteriaCheckDTO(
 
     String comment,
 
-    boolean hasIssue
+    boolean hasIssue,
+
+    UUID imageServiceId
 ){}

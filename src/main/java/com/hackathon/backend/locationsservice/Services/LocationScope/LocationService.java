@@ -892,7 +892,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                                                         ch.getBarrierlessCriteria().getId(),
                                                         ch.getUser().getId(),
                                                         ch.getComment(),
-                                                        ch.isHasIssue()
+                                                        ch.isHasIssue(),
+                                                        ch.getImageServiceId()
                                                 ))
                                                 .toList()
                                 ))
@@ -971,7 +972,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                                                         ch.getBarrierlessCriteria().getId(),
                                                         ch.getUser().getId(),
                                                         ch.getComment(),
-                                                        ch.isHasIssue()
+                                                        ch.isHasIssue(),
+                                                        ch.getImageServiceId()
                                                 ))
                                                 .toList()
                                 ))

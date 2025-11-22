@@ -83,4 +83,7 @@ public class BarrierlessCriteriaCheck {
         this.createdAt = other.getCreatedAt();
         this.updatedAt = other.getUpdatedAt();
     }
+
+    @Column(name = "image_service_id")
+    private UUID imageServiceId;
 }

@@ -6,10 +6,7 @@ import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaSco
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Enums.BarrierlessCriteriaRank;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -45,4 +42,7 @@ public class BarrierlessCriteriaCheckCreateDTO extends BaseRegularCreateDTO {
 
     @NotNull
     public LocalDateTime updatedAt = LocalDateTime.now();
+
+    @NotNull
+    private UUID imageServiceId;
 }

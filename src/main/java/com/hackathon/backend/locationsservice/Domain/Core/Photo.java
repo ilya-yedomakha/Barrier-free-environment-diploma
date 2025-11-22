@@ -21,7 +21,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "photos")
+@Table(name = "photos",schema = "geo_score_schema")
 public class Photo extends BaseEntity {
 
     @NotNull

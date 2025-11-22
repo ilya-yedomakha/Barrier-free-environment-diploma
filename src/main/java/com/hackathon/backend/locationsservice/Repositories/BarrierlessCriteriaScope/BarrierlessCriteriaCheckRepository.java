@@ -2,6 +2,7 @@ package com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaS
 
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheckEmbeddedId;
+import com.hackathon.backend.locationsservice.Security.Domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -25,5 +26,7 @@ public interface BarrierlessCriteriaCheckRepository
 
 
     List<BarrierlessCriteriaCheck> findAllByUser_Id(UUID userId);
+
+    UUID user(User user);
 }
 

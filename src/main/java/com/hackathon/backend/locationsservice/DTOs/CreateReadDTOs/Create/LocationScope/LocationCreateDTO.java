@@ -5,6 +5,7 @@ import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Contacts;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.Coordinates;
 import com.hackathon.backend.locationsservice.Domain.JSONB_POJOs.WorkingHours;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -61,5 +62,7 @@ public class LocationCreateDTO extends BaseRegularCreateDTO {
     public LocalDateTime lastVerifiedAt;
 
     public String rejectionReason;
+
+    private UUID imageServiceId;
 
 }

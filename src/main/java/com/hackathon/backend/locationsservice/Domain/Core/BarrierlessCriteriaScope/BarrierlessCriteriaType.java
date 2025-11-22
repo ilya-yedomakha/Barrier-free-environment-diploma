@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "BarrierlessCriteriaTypes")
+@Table(name = "BarrierlessCriteriaTypes",schema = "geo_score_schema")
 @Getter
 @Setter
 @AllArgsConstructor

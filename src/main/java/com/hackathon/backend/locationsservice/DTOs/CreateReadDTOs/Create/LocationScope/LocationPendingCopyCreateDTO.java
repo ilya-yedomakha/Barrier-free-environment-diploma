@@ -57,4 +57,13 @@ public class LocationPendingCopyCreateDTO extends BaseRegularCreateDTO {
     @Column(nullable = false)
     private UUID updatedBy;
 
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    private LocalDateTime rejectedAt;
+
+    private UUID rejectedBy;
+
+    private UUID imageServiceId;
+
 }

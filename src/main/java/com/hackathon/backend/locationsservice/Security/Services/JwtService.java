@@ -37,34 +37,37 @@ public class JwtService {
 
 
     public boolean isValid(String token, UserDetails user) {
-
         String username = extractUsername(token);
 
         boolean isValidToken = tokenRepository.findByAccessToken(token)
-                .map(t -> !t.isLoggedOut()).orElse(false);
+                .map(t -> !t.isLoggedOut())
+                .orElse(false);
 
         return username.equals(user.getUsername())
-                && isAccessTokenExpired(token)
+                && !isTokenExpired(token)       // токен НЕ має бути прострочений
                 && isValidToken;
     }
 
 
-    public boolean isValidRefresh(String token, User user) {
 
+    public boolean isValidRefresh(String token, User user) {
         String username = extractUsername(token);
 
         boolean isValidRefreshToken = tokenRepository.findByRefreshToken(token)
-                .map(t -> !t.isLoggedOut()).orElse(false);
+                .map(t -> !t.isLoggedOut())
+                .orElse(false);
 
         return username.equals(user.getUsername())
-                && isAccessTokenExpired(token)
+                && !isTokenExpired(token)
                 && isValidRefreshToken;
     }
 
 
-    private boolean isAccessTokenExpired(String token) {
-        return !extractExpiration(token).before(new Date());
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
     }
+
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);

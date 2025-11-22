@@ -27,7 +27,11 @@ public class LocationPendingCopyMapper implements BaseMapper<LocationPendingCopy
         locationPendingCopy.setWorkingHours(dto.getWorkingHours());
         locationPendingCopy.setOrganizationId(dto.getOrganizationId());
         locationPendingCopy.setStatus(dto.getStatus());
+        locationPendingCopy.setRejectionReason(dto.getRejectionReason());
+        locationPendingCopy.setRejectedAt(dto.getRejectedAt());
+        locationPendingCopy.setRejectedBy(dto.getRejectedBy());
         locationPendingCopy.setUpdatedAt(dto.getUpdatedAt());
+        locationPendingCopy.setImageServiceId(dto.getImageServiceId());
 
         return locationPendingCopy;
     }
@@ -44,7 +48,11 @@ public class LocationPendingCopyMapper implements BaseMapper<LocationPendingCopy
         locationPendingCopyReadDTO.setWorkingHours(locationPendingCopy.getWorkingHours());
         locationPendingCopyReadDTO.setOrganizationId(locationPendingCopy.getOrganizationId());
         locationPendingCopyReadDTO.setStatus(locationPendingCopy.getStatus());
+        locationPendingCopyReadDTO.setRejectionReason(locationPendingCopy.getRejectionReason());
+        locationPendingCopyReadDTO.setRejectedBy(locationPendingCopy.getRejectedBy());
+        locationPendingCopyReadDTO.setRejectedAt(locationPendingCopy.getRejectedAt());
         locationPendingCopyReadDTO.setUpdatedAt(locationPendingCopy.getUpdatedAt());
+        locationPendingCopyReadDTO.setImageServiceId(locationPendingCopy.getImageServiceId());
 
         return locationPendingCopyReadDTO;
     }

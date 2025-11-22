@@ -13,6 +13,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@Table(schema = "geo_score_schema")
 public class BarrierlessCriteriaCheck {
 
     @EmbeddedId
@@ -82,4 +83,7 @@ public class BarrierlessCriteriaCheck {
         this.createdAt = other.getCreatedAt();
         this.updatedAt = other.getUpdatedAt();
     }
+
+    @Column(name = "image_service_id")
+    private UUID imageServiceId;
 }

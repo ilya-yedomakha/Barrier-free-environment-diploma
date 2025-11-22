@@ -32,4 +32,6 @@ public class BarrierlessCriteriaCheckReadDTO {
     public LocalDateTime createdAt;
 
     public LocalDateTime updatedAt;
+
+    private UUID imageServiceId;
 }

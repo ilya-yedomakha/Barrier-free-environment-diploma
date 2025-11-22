@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "token_table")
+@Table(name = "token_table", schema = "geo_score_schema")
 @Getter
 @Setter
 @AllArgsConstructor

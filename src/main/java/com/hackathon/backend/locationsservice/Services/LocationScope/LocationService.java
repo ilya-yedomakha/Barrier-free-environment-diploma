@@ -6,16 +6,18 @@ import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.Locatio
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationMapper;
 import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationPendingCopyMapper;
 import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.text_moderation.ModerationElementType;
+import com.hackathon.backend.locationsservice.DTOs.Mappers.LocationScope.LocationTypeMapper;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaCheckDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaGroupDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
-import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.images.IdReplacementRequest;
-import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.images.TypeOfImageReplacement;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.RejectionReason;
+import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
@@ -35,11 +37,16 @@ import com.hackathon.backend.locationsservice.Repositories.LocationScope.Locatio
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationTypeRepository;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.EntityError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
+import com.hackathon.backend.locationsservice.Result.EntityErrors.UserError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
+import com.hackathon.backend.locationsservice.Security.Domain.User;
+import com.hackathon.backend.locationsservice.Security.Services.UserService;
 import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
+import com.hackathon.backend.locationsservice.Services.util.StringSimilarity;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
@@ -54,6 +61,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -62,6 +70,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final LocationTypeRepository locationTypeRepository;
     private final BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository;
     private final LocationPendingCopyMapper locationPendingCopyMapper;
+    private final LocationTypeMapper locationTypeMapper;
     private final LocationPendingCopyRepository locationPendingCopyRepository;
     private final LocationScoreChgRepository locationScoreChgRepository;
     private final UserServiceImpl userService;
@@ -69,6 +78,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     private final ModerationTextEventPub moderationTextEventPub;
 
     LocationService(LocationRepository locationRepository, LocationMapper locationMapper, LocationTypeRepository locationTypeRepository, BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository,
+                    LocationPendingCopyMapper locationPendingCopyMapper, LocationTypeMapper locationTypeMapper, LocationPendingCopyRepository locationPendingCopyRepository,
+                    LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService) {
                     LocationPendingCopyMapper locationPendingCopyMapper, LocationPendingCopyRepository locationPendingCopyRepository,
                     LocationScoreChgRepository locationScoreChgRepository, UserServiceImpl userService,
                     LocationCreationEventPub locationCreationEventPub,ModerationTextEventPub moderationTextEventPub) {
@@ -78,6 +89,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         this.locationCreationEventPub = locationCreationEventPub;
         this.barrierlessCriteriaCheckRepository = barrierlessCriteriaCheckRepository;
         this.locationPendingCopyMapper = locationPendingCopyMapper;
+        this.locationTypeMapper = locationTypeMapper;
         this.locationPendingCopyRepository = locationPendingCopyRepository;
         this.locationScoreChgRepository = locationScoreChgRepository;
         this.userService = userService;
@@ -144,29 +156,6 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             );
         }
 
-//TODO:  CHANGE TO FIND BY MIN OVERALL ACCESSIBILITY SCORE
-
-//        if (params.containsKey("minScore")) {
-//            Integer minScore = (Integer) params.get("minScore");
-//
-//            Subquery<UUID> subquery = cq.subquery(UUID.class);
-//            Root<Feature> featureRoot = subquery.from(Feature.class);
-//            subquery.select(featureRoot.get("locationId"))
-//                    .where(cb.greaterThanOrEqualTo(featureRoot.get("qualityRating"), minScore));
-//
-//            predicates.add(locationRoot.get("id").in(subquery));
-//        }
-//
-//        if (params.containsKey("features")) {
-//            String[] features = ((String) params.get("features")).split(",");
-//            Subquery<UUID> featureSub = cq.subquery(UUID.class);
-//            Root<Feature> featureRoot = featureSub.from(Feature.class);
-//            featureSub.select(featureRoot.get("locationId"))
-//                    .where(featureRoot.get("type").in(Arrays.asList(features)));
-//
-//            predicates.add(locationRoot.get("id").in(featureSub));
-//        }
-
         if (params.containsKey("verified") && Boolean.TRUE.equals(params.get("verified"))) {
             Subquery<UUID> verificationSub = cq.subquery(UUID.class);
             Root<Verification> verRoot = verificationSub.from(Verification.class);
@@ -183,7 +172,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
             GeometryFactory geometryFactory = new GeometryFactory();
             Point point = geometryFactory.createPoint(new Coordinate(lng, lat));
-            point.setSRID(4326);
+            point.setSRID(5564);
 
             Expression<Double> distanceExpr = cb.function("ST_Distance", Double.class,
                     locationRoot.get("coordinates"), cb.literal(point));
@@ -263,7 +252,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (isAuthenticated && username != null) {
             UserDTO user = userService.loadWholeUserByUsername(username);
             newLocation.setCreatedBy(user.id());
-            if (isAdmin){
+            if (isAdmin) {
                 newLocation.setStatus(LocationStatusEnum.published);
             }
         }
@@ -313,19 +302,65 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
 
         Location savedLocation = repository.save(newLocation);
-
-        IdReplacementRequest replacementRequest = IdReplacementRequest.builder()
-                .newId(savedLocation.getId())
-                .correlationId(locationCreateDTO.correlationId)
-                .typeOfImageReplacement(TypeOfImageReplacement.LocationImage).build();
-        locationCreationEventPub.locationCreated(replacementRequest);
-
         Result<Location, LocationReadDTO> res = Result.success();
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
 
         moderationTextEventPub.sendTextForModeration(savedLocation.getId().toString(), ModerationElementType.LOCATION,
                 savedLocation.getName().concat(" ").concat(savedLocation.getDescription()));
+
+        return res;
+
+    }
+
+    public Result<Location, LocationReadDTO> isValid(LocationCreateDTO locationCreateDTO) {
+        Optional<LocationType> locationType = locationTypeRepository.findById(locationCreateDTO.getType());
+        if (locationType.isEmpty()) {
+            return Result.failure(EntityError.notFound(BarrierlessCriteriaGroup.class, locationCreateDTO.getType()));
+        }
+        Location newLocation = mapper.toEntity(locationCreateDTO);
+        if (newLocation == null) {
+            return Result.failure(EntityError.nullReference(type));
+        }
+        List<Location> locations = repository.findAll();
+        if (checkNameDuplicates(locations, newLocation.getName())) {
+            return Result.failure(EntityError.sameName(type, newLocation.getName()));
+        }
+
+        for (Location location : locations) {
+            if (location.getCoordinates().equals(newLocation.getCoordinates())) {
+                return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));
+            }
+        }
+
+        WorkingHours wh = newLocation.getWorkingHours();
+        if (wh != null) {
+            boolean invalidHours = Arrays.stream(WorkingHours.class.getDeclaredFields())
+                    .filter(f -> f.getType().equals(WorkingHours.DayHours.class))
+                    .map(f -> {
+                        try {
+                            f.setAccessible(true);
+                            return (WorkingHours.DayHours) f.get(wh);
+                        } catch (IllegalAccessException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .anyMatch(day -> {
+                        boolean hasOpen = day.getOpen() != null && !day.getOpen().isBlank();
+                        boolean hasClose = day.getClose() != null && !day.getClose().isBlank();
+                        return hasOpen ^ hasClose;
+                    });
+
+            if (invalidHours) {
+                return Result.failure(LocationError.invalidWorkingHours());
+            }
+        }
+
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = newLocation;
+        res.entityDTO = mapper.toDto(newLocation);
 
         return res;
 
@@ -373,7 +408,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         return res;
     }
 
-    public Result<Location, LocationReadDTO> update(UUID locationId, Long locationPendingCopyId) {
+    public Result<Location, LocationReadDTO> update(UUID locationId, Long locationPendingCopyId, LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
@@ -389,20 +424,43 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));
         }
         List<Location> locations = repository.findAll();
-        if (checkNameDuplicates(locations, locationPendingCopy.getName())) {
-            return Result.failure(EntityError.sameName(type, locationPendingCopy.getName()));
+        locations.remove(oldLocation);
+        if (checkNameDuplicates(locations, locationPendingCopyCreateDTO.getName())) {
+            return Result.failure(EntityError.sameName(type, locationPendingCopyCreateDTO.getName()));
         }
 
-        oldLocation.setAddress(locationPendingCopy.getAddress());
-        oldLocation.setName(locationPendingCopy.getName());
+        oldLocation.setAddress(locationPendingCopyCreateDTO.getAddress());
+        oldLocation.setName(locationPendingCopyCreateDTO.getName());
         oldLocation.setUpdatedAt(locationPendingCopy.getUpdatedAt());
         oldLocation.setUpdatedBy(locationPendingCopy.getUpdatedBy());
-        oldLocation.setDescription(locationPendingCopy.getDescription());
-        oldLocation.setContacts(locationPendingCopy.getContacts());
+        oldLocation.setDescription(locationPendingCopyCreateDTO.getDescription());
+        oldLocation.setContacts(locationPendingCopyCreateDTO.getContacts());
         oldLocation.setStatus(LocationStatusEnum.published);
 
-        oldLocation.setOrganizationId(locationPendingCopy.getOrganizationId());
-        oldLocation.setWorkingHours(locationPendingCopy.getWorkingHours());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        boolean isAdmin = false;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            if (isAdmin) {
+                oldLocation.setLastVerifiedAt(LocalDateTime.now());
+                oldLocation.setLastVerifiedBy(user.id());
+            }
+        }
+
+
+        oldLocation.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
+        oldLocation.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
 
         Location savedLocation = repository.save(oldLocation);
         locationPendingCopyRepository.delete(locationPendingCopy);
@@ -410,7 +468,72 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
 
-        locationPendingCopyRepository.delete(locationPendingCopy);
+        return res;
+
+    }
+
+    public Result<Location, LocationReadDTO> updateByDuplicate(UUID locationId, UUID duplicateId, LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+//        Optional<LocationPendingCopy> locationPendingCopyOptional = locationPendingCopyRepository.findById(locationPendingCopyId);
+//        if (locationPendingCopyOptional.isEmpty()) {
+//            return Result.failure(EntityError.notFound(LocationPendingCopy.class, locationPendingCopyId));
+//        }
+        Optional<Location> duplicateOptional = repository.findById(duplicateId);
+        if (duplicateOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, duplicateId));
+        }
+
+        Location newLocation = locationOptional.get();
+        Location duplLocation = duplicateOptional.get();
+//        if (!oldLocation.getId().equals(locationPendingCopy.getLocation().getId())) {
+//            return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));
+//        }
+        List<Location> locations = repository.findAll();
+        locations.removeAll(Arrays.asList(duplLocation, newLocation));
+        if (checkNameDuplicates(locations, locationPendingCopyCreateDTO.getName())) {
+            return Result.failure(EntityError.sameName(type, locationPendingCopyCreateDTO.getName()));
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        boolean isAdmin = false;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            if (isAdmin) {
+                duplLocation.setLastVerifiedAt(LocalDateTime.now());
+                duplLocation.setLastVerifiedBy(user.id());
+            }
+        }
+
+        duplLocation.setAddress(locationPendingCopyCreateDTO.getAddress());
+        duplLocation.setName(locationPendingCopyCreateDTO.getName());
+        duplLocation.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
+        duplLocation.setUpdatedBy(locationPendingCopyCreateDTO.getUpdatedBy());
+        duplLocation.setDescription(locationPendingCopyCreateDTO.getDescription());
+        duplLocation.setContacts(locationPendingCopyCreateDTO.getContacts());
+        duplLocation.setStatus(LocationStatusEnum.published);
+
+        duplLocation.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
+        duplLocation.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
+
+        Location savedLocation = repository.save(duplLocation);
+        repository.delete(newLocation);
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = savedLocation;
+        res.entityDTO = mapper.toDto(savedLocation);
 
 //        moderationTextEventPub.sendTextForModeration(newLocation.getId().toString(), ModerationElementType.LOCATION,
 //                newLocation.getName().concat(" ").concat(newLocation.getDescription()));
@@ -434,6 +557,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         }
 
         List<Location> locations = repository.findAll();
+        Location location = locationOptional.get();
+        locations.remove(location);
         if (checkNameDuplicates(locations, locationPendingCopy.getName())) {
             return Result.failure(EntityError.sameName(LocationPendingCopy.class, locationPendingCopy.getName()));
         }
@@ -444,7 +569,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         locationPendingCopy.setContacts(locationPendingCopyCreateDTO.getContacts());
         locationPendingCopy.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
         locationPendingCopy.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
-        locationPendingCopy.setUpdatedAt(locationPendingCopyCreateDTO.getUpdatedAt());
+        locationPendingCopy.setUpdatedAt(LocalDateTime.now());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = null;
         UUID userId = null;
@@ -479,6 +604,101 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         return res;
     }
 
+    public Result<Location, LocationReadDTO> getUserModifiedLocations(){
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
+
+
+        List<Location> locationsCreatedBy = repository.findAllByCreatedBy(currentUserId);
+        List<Location> locationsUpdatedBy = repository.findAllByUpdatedBy(currentUserId);
+
+        List<BarrierlessCriteriaCheck> barrierlessCriteriaChecksOfUser = barrierlessCriteriaCheckRepository.findAllByUser_Id(currentUserId);
+
+        List<Location> locationsByChecks = new ArrayList<>();
+
+        for (BarrierlessCriteriaCheck check : barrierlessCriteriaChecksOfUser){
+            locationsByChecks.add(check.getLocation());
+        }
+
+        List<LocationPendingCopy> pendingLocationsOfUser = locationPendingCopyRepository.getLocationPendingCopiesByUpdatedBy(currentUserId);
+        List<Location> locationsByPendings = new ArrayList<>();
+
+        for (LocationPendingCopy locationPendingCopy : pendingLocationsOfUser){
+            locationsByPendings.add(locationPendingCopy.getLocation());
+        }
+
+        HashSet<Location> combinedLocations = new HashSet<>();
+        combinedLocations.addAll(locationsCreatedBy);
+        combinedLocations.addAll(locationsUpdatedBy);
+        combinedLocations.addAll(locationsByPendings);
+        combinedLocations.addAll(locationsByChecks);
+
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entities = combinedLocations.stream().toList();
+        res.entityDTOs = res.entities.stream().map(mapper::toDto).toList();
+        return res;
+
+    }
+
+    public Result<Location, LocationReadDTO> getUserModifiedLocationsByUsername(String username){
+
+        UserDTO user = userService.loadWholeUserByUsername(username);
+
+        if (user == null){
+            return Result.failure(UserError.notFound(username));
+        }
+
+        final UUID currentUserId = user.id();
+
+
+        List<Location> locationsCreatedBy = repository.findAllByCreatedBy(currentUserId);
+        List<Location> locationsUpdatedBy = repository.findAllByUpdatedBy(currentUserId);
+
+        List<BarrierlessCriteriaCheck> barrierlessCriteriaChecksOfUser = barrierlessCriteriaCheckRepository.findAllByUser_Id(currentUserId);
+
+        List<Location> locationsByChecks = new ArrayList<>();
+
+        for (BarrierlessCriteriaCheck check : barrierlessCriteriaChecksOfUser){
+            locationsByChecks.add(check.getLocation());
+        }
+
+        List<LocationPendingCopy> pendingLocationsOfUser = locationPendingCopyRepository.getLocationPendingCopiesByUpdatedBy(currentUserId);
+        List<Location> locationsByPendings = new ArrayList<>();
+
+        for (LocationPendingCopy locationPendingCopy : pendingLocationsOfUser){
+            locationsByPendings.add(locationPendingCopy.getLocation());
+        }
+
+        HashSet<Location> combinedLocations = new HashSet<>();
+        combinedLocations.addAll(locationsCreatedBy);
+        combinedLocations.addAll(locationsUpdatedBy);
+        combinedLocations.addAll(locationsByPendings);
+        combinedLocations.addAll(locationsByChecks);
+
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entities = combinedLocations.stream().toList();
+        res.entityDTOs = res.entities.stream().map(mapper::toDto).toList();
+        return res;
+
+    }
+
     public Result<Location, LocationReadDTO> update(UUID locationId, LocationCreateDTO locationCreateDTO) {
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
@@ -493,6 +713,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
             return Result.failure(EntityError.nullReference(type));
         }
         List<Location> locations = repository.findAll();
+        locations.remove(locationOptional.get());
         if (checkNameDuplicates(locations, newLocation.getName())) {
             return Result.failure(EntityError.sameName(type, newLocation.getName()));
         }
@@ -503,15 +724,40 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                 return Result.failure(LocationError.sameCoordinates(newLocation.getCoordinates()));
             }
         }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+        boolean isAdmin = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+            if (isAdmin) {
+                oldLocation.setLastVerifiedAt(LocalDateTime.now());
+                oldLocation.setLastVerifiedBy(userId);
+            }
+        }
+
+        final UUID currentUserId = userId;
         oldLocation.setName(newLocation.getName());
         oldLocation.setCoordinates(newLocation.getCoordinates());
         oldLocation.setAddress(newLocation.getAddress());
-        oldLocation.setCreatedAt(newLocation.getCreatedAt());
-        oldLocation.setCreatedBy(newLocation.getCreatedBy());
-        oldLocation.setUpdatedAt(newLocation.getUpdatedAt());
+//        oldLocation.setCreatedAt(newLocation.getCreatedAt());
+//        oldLocation.setCreatedBy(newLocation.getCreatedBy());
+        oldLocation.setUpdatedAt(LocalDateTime.now());
+        oldLocation.setUpdatedBy(currentUserId);
         oldLocation.setDescription(newLocation.getDescription());
         oldLocation.setContacts(newLocation.getContacts());
-        oldLocation.setStatus(newLocation.getStatus());
+        oldLocation.setStatus(LocationStatusEnum.published);
         if (!newLocationTypeOptional.get().equals(oldLocation.getType())) {
             BarrierlessCriteriaGroup oldLocBarrierlessCriteriaGroup = oldLocation.getType().getBarrierlessCriteriaGroup();
             Set<BarrierlessCriteriaType> oldLocbarrierlessCriteriaTypes = oldLocBarrierlessCriteriaGroup.getBarrierlessCriteriaTypes();
@@ -535,8 +781,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         }
         oldLocation.setType(newLocationTypeOptional.get());
         oldLocation.setOrganizationId(newLocation.getOrganizationId());
-        oldLocation.setLastVerifiedAt(newLocation.getLastVerifiedAt());
-        oldLocation.setCoordinates(newLocation.getCoordinates());
+        oldLocation.setLastVerifiedAt(LocalDateTime.now());
+        oldLocation.setLastVerifiedBy(currentUserId);
         oldLocation.setWorkingHours(newLocation.getWorkingHours());
         oldLocation.setRejectionReason(newLocation.getRejectionReason());
         oldLocation.setOverallAccessibilityScore(newLocation.getOverallAccessibilityScore());
@@ -620,6 +866,25 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         return nearbySimilar.stream().map(mapper::toDto).toList();
     }
 
+    public List<LocationReadDTO> findSimilarById(UUID id) {
+        Location current = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + id));
+
+        List<Location> nearbySimilar = repository.findNearbySimilarLocations(
+                current.getCoordinates().getY(),  // lat
+                current.getCoordinates().getX(),  // lng
+                current.getName(),
+                current.getAddress()
+        );
+
+        // 🔹 Відфільтровуємо саму локацію
+        return nearbySimilar.stream()
+                .filter(loc -> !Objects.equals(loc.getId(), id))
+                .map(mapper::toDto)
+                .toList();
+    }
+
+
     public Result<LocationType, LocationTypeWithGroupDTO> getCriteriaTree(UUID locationId) {
         Optional<Location> locationOptional = repository.findById(locationId);
         if (locationOptional.isEmpty()) {
@@ -650,7 +915,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                                                         ch.getBarrierlessCriteria().getId(),
                                                         ch.getUser().getId(),
                                                         ch.getComment(),
-                                                        ch.isHasIssue()
+                                                        ch.isHasIssue(),
+                                                        ch.getImageServiceId()
                                                 ))
                                                 .toList()
                                 ))
@@ -729,7 +995,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
                                                         ch.getBarrierlessCriteria().getId(),
                                                         ch.getUser().getId(),
                                                         ch.getComment(),
-                                                        ch.isHasIssue()
+                                                        ch.isHasIssue(),
+                                                        ch.getImageServiceId()
                                                 ))
                                                 .toList()
                                 ))
@@ -799,6 +1066,259 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
         res.setEntities(entities);
         res.entityDTOs = entities.stream().map(locationPendingCopyMapper::toDto).toList();
+        return res;
+    }
+
+    public Result<LocationType, LocationTypeReadDTO> getLocationTypeByLocationId(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Result<LocationType, LocationTypeReadDTO> res = Result.success();
+        res.setEntity(locationOptional.get().getType());
+        res.setEntityDTO(locationTypeMapper.toDto(locationOptional.get().getType()));
+        return res;
+    }
+
+    public Result<Location, LocationReadDTO> changeStatus(UUID locationId, String status, String rejectionReason) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Location location = locationOptional.get();
+
+        // ✅ Перевірка валідності статусу
+        LocationStatusEnum newStatus;
+        try {
+            newStatus = LocationStatusEnum.valueOf(status.toLowerCase());
+        } catch (IllegalArgumentException e) {
+            return Result.failure(EntityError.invalid("Invalid status: " + status));
+        }
+
+        LocationStatusEnum currentStatus = location.getStatus();
+
+        // ✅ Дозволені переходи:
+        // pending → published | rejected
+        // published → pending
+        // rejected → pending
+        boolean allowedTransition =
+                (currentStatus == LocationStatusEnum.pending && (newStatus == LocationStatusEnum.published || newStatus == LocationStatusEnum.rejected)) ||
+                        (currentStatus == LocationStatusEnum.published && newStatus == LocationStatusEnum.pending) ||
+                        (currentStatus == LocationStatusEnum.rejected && newStatus == LocationStatusEnum.pending);
+
+        if (!allowedTransition) {
+            return Result.failure(EntityError.invalid(
+                    String.format("Cannot change status from %s to %s", currentStatus, newStatus)
+            ));
+        }
+
+        // ✅ Якщо відхилено — потрібна причина
+        if (newStatus == LocationStatusEnum.rejected) {
+            if (rejectionReason == null || rejectionReason.trim().isEmpty()) {
+                return Result.failure(EntityError.invalid("Rejection reason is required for rejected status"));
+            }
+            location.setRejectionReason(rejectionReason.trim());
+        } else {
+            location.setRejectionReason(null);
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+        boolean isAdmin = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+            if (isAdmin) {
+                location.setLastVerifiedAt(LocalDateTime.now());
+                location.setLastVerifiedBy(userId);
+            }
+        }
+
+        // ✅ Оновлення статусу
+        location.setStatus(newStatus);
+
+        Location savedLocation = repository.save(location);
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = savedLocation;
+        res.entityDTO = mapper.toDto(savedLocation);
+        return res;
+    }
+
+    public Result<Location, LocationReadDTO> deleteLocation(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Location location = locationOptional.get();
+
+        List<LocationPendingCopy> locationPendingCopies = locationPendingCopyRepository.getLocationPendingCopiesByLocation(location);
+
+        locationPendingCopyRepository.deleteAll(locationPendingCopies);
+
+        List<BarrierlessCriteriaCheck> barrierlessCriteriaChecks = barrierlessCriteriaCheckRepository.findAllByLocation_Id(locationId);
+
+        barrierlessCriteriaCheckRepository.deleteAll(barrierlessCriteriaChecks);
+
+        repository.delete(location);
+
+        Result<Location, LocationReadDTO> res = Result.success();
+        res.entity = location;
+        res.entityDTO = mapper.toDto(location);
+        return res;
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> getPendingLocationOfUserByLocationId(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+        Location location = locationOptional.get();
+
+        List<LocationPendingCopy> locationPendingCopies = locationPendingCopyRepository.getLocationPendingCopiesByLocation(location);
+
+        LocationPendingCopy userLocationPendingCopy = null;
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
+
+        for (LocationPendingCopy copy : locationPendingCopies){
+            if (copy.getUpdatedBy().equals(currentUserId)){
+                userLocationPendingCopy = copy;
+                break;
+            }
+        }
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.entity = userLocationPendingCopy;
+        res.entityDTO = locationPendingCopyMapper.toDto(userLocationPendingCopy);
+        return res;
+
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> rejectPendingLocation(Long pendingId, RejectionReason rejectionReason) {
+        Optional<LocationPendingCopy> locationOptional = locationPendingCopyRepository.findById(pendingId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(LocationPendingCopy.class, pendingId));
+        }
+
+        LocationPendingCopy locationPendingCopy = locationOptional.get();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
+        locationPendingCopy.setRejectedBy(currentUserId);
+        locationPendingCopy.setStatus(LocationStatusEnum.rejected);
+        locationPendingCopy.setRejectedAt(LocalDateTime.now());
+        locationPendingCopy.setRejectionReason(rejectionReason.rejectionReason());
+
+        LocationPendingCopy savedLocationPendingCopy = locationPendingCopyRepository.save(locationPendingCopy);
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.entity = savedLocationPendingCopy;
+        res.entityDTO = locationPendingCopyMapper.toDto(savedLocationPendingCopy);
+        return res;
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> getUserPendingLocationsByLocationId(UUID locationId) {
+        Optional<Location> locationOptional = repository.findById(locationId);
+        if (locationOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(Location.class, locationId));
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            UserDTO user = userService.loadWholeUserByUsername(username);
+            userId = user.id();
+        }
+
+        final UUID currentUserId = userId;
+
+        Location location = locationOptional.get();
+        List<LocationPendingCopy> copies = locationPendingCopyRepository.getLocationPendingCopiesByLocation(location);
+        copies.removeIf(copy -> !copy.getUpdatedBy().equals(currentUserId));
+
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.entities = copies;
+        res.entityDTOs = copies.stream().map(locationPendingCopyMapper::toDto).toList();
+        return res;
+
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> deletePending(Long pendingId) {
+        Optional<LocationPendingCopy> locationPendingCopyOptional = locationPendingCopyRepository.findById(pendingId);
+        if (locationPendingCopyOptional.isEmpty()) {
+            return Result.failure(EntityError.notFound(LocationPendingCopy.class, pendingId));
+        }
+
+        LocationPendingCopy locationPendingCopy = locationPendingCopyOptional.get();
+
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        locationPendingCopyRepository.delete(locationPendingCopy);
+        res.entity = locationPendingCopy;
+        res.entityDTO = locationPendingCopyMapper.toDto(locationPendingCopy);
+        return res;
+    }
+
+    public Result<LocationPendingCopy, LocationPendingCopyReadDTO> getUserPendingLocationsByUsername(String username) {
+        UserDTO user = userService.loadWholeUserByUsername(username);
+
+        if (user == null){
+            return Result.failure(UserError.notFound(username));
+        }
+
+        final UUID currentUserId = user.id();
+
+        List<LocationPendingCopy> entities = locationPendingCopyRepository.getLocationPendingCopiesByUpdatedBy(currentUserId);
+        Result<LocationPendingCopy, LocationPendingCopyReadDTO> res = Result.success();
+        res.setEntities(entities);
+        res.setEntityDTOs(entities.stream().map(locationPendingCopyMapper::toDto).toList());
         return res;
     }
 }

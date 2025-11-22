@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "reviews")
+@Table(name = "reviews",schema = "geo_score_schema")
 public class Review {
 
         @Id

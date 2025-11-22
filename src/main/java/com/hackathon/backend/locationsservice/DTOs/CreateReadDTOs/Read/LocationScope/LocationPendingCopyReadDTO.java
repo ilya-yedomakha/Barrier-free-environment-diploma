@@ -43,7 +43,15 @@ public class LocationPendingCopyReadDTO {
 
     private LocationStatusEnum status;
 
+    private String rejectionReason;
+
+    private LocalDateTime rejectedAt;
+
+    private UUID rejectedBy;
+
     private LocalDateTime updatedAt;
 
     private UUID updatedBy;
+
+    private UUID imageServiceId;
 }

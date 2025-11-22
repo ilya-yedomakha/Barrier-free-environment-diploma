@@ -1,21 +1,24 @@
 package com.hackathon.backend.locationsservice.Security.Controller;
 
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
+import com.hackathon.backend.locationsservice.Result.Result;
+import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserCreateDTO;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
+import com.hackathon.backend.locationsservice.Security.DTO.RegistrationRequestDto;
+import com.hackathon.backend.locationsservice.Security.DTO.RoleUpdateRequest;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
-import com.hackathon.backend.locationsservice.Security.Services.UserService;
 import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -59,6 +62,68 @@ public class UserController {
                         .map(GrantedAuthority::getAuthority)
                         .toList()
         );
+    }
+
+    @GetMapping("/")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> getAllUsers() {
+        Result<User, UserDTO> Result = userService.getAllUsers();
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/{user_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> getUserById(@PathVariable(name = "user_id") UUID userId) {
+        Result<User, UserDTO> Result = userService.getUserById(userId);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/username/{username}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> getUserByUsername(@PathVariable(name = "username") String username) {
+        Result<User, UserDTO> Result = userService.getUserByUsername(username);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
+
+    @PatchMapping("/username/{username}/role")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> updateUserRole(@PathVariable(name = "username") String username, @RequestBody RoleUpdateRequest role) {
+        Result<User, UserDTO> Result = userService.updateUserRole(username,role);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok(Result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
+
+    @PostMapping("/")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<String> register(
+            @RequestBody UserCreateDTO userCreateDTO) {
+
+        if(userService.existsByUsername(userCreateDTO.username())) {
+            return ResponseEntity.badRequest().body("The username is already taken");
+        }
+
+        if(userService.existsByEmail(userCreateDTO.email())) {
+            return ResponseEntity.badRequest().body("Email is already taken");
+        }
+
+        userService.registerUser(userCreateDTO);
+
+        return ResponseEntity.ok("Registration was successfull");
     }
 
 }

@@ -22,7 +22,7 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
     WHERE ST_DWithin(
               l.coordinates,
               ST_SetSRID(ST_MakePoint(:lng, :lat), 5564),
-              0.0009009
+              100
           )
       AND (
           similarity(LOWER(l.name), LOWER(:name)) > 0.3

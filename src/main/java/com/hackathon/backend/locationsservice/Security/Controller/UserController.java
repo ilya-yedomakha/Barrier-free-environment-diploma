@@ -8,6 +8,9 @@ import com.hackathon.backend.locationsservice.Security.DTO.RegistrationRequestDt
 import com.hackathon.backend.locationsservice.Security.DTO.RoleUpdateRequest;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
 import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
+import com.hackathon.backend.locationsservice.Services.statistics.StatisticsService;
+import com.hackathon.backend.locationsservice.Services.statistics.models.UserStatistics;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,12 +25,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
     private final UserServiceImpl userService;
+    private final StatisticsService statisticsService;
 
-    public UserController(UserServiceImpl userService) {
-        this.userService = userService;
-    }
 
     @GetMapping("/me/")
     public ResponseEntity<UserDTO> getByUsername() {
@@ -124,6 +126,13 @@ public class UserController {
         userService.registerUser(userCreateDTO);
 
         return ResponseEntity.ok("Registration was successfull");
+    }
+
+    @GetMapping("/statistic")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
+    public ResponseEntity<UserStatistics> statistic() {
+
+        return ResponseEntity.ok(statisticsService.getUserStatistics());
     }
 
 }

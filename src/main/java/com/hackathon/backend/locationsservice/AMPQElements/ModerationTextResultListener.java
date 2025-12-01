@@ -34,10 +34,22 @@ public class ModerationTextResultListener {
             case LOCATION -> {
                 Location location = locationRepository.
                         findById(UUID.fromString(response.getRequestId())).orElse(null);
-                if (location != null && response.getResult().getCategory() != ModerationCategory.SAFE) {
-                    location.setStatus(LocationStatusEnum.rejected);
+
+                if(location != null) {
+
+                   switch (response.getResult().getCategory()) {
+                       case SAFE -> {
+                           location.setStatus(LocationStatusEnum.published);
+                       }
+                       case UNKNOWN -> {
+                           location.setStatus(LocationStatusEnum.pending);
+                       }
+                       default -> location.setStatus(LocationStatusEnum.rejected);
+                   }
+
                     locationRepository.save(location);
                 }
+
             }
             case CHECK -> {
                 List<UUID> uuidList = Arrays.stream(response.getRequestId().split(","))

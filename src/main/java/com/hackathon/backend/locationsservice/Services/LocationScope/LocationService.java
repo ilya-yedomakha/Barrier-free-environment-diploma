@@ -305,7 +305,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entityDTO = mapper.toDto(savedLocation);
 
         moderationTextEventPub.sendTextForModeration(savedLocation.getId().toString(), ModerationElementType.LOCATION,
-                savedLocation.getName().concat(" ").concat(savedLocation.getDescription()));
+                "Назва: ".concat(savedLocation.getName()).concat(", опис: ").concat(savedLocation.getDescription()));
 
         return res;
 
@@ -400,8 +400,8 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entity = savedLocation;
         res.entityDTO = mapper.toDto(savedLocation);
 
-        moderationTextEventPub.sendTextForModeration(newLocation.getId().toString(), ModerationElementType.LOCATION,
-                newLocation.getName().concat(" ").concat(newLocation.getDescription()));
+        moderationTextEventPub.sendTextForModeration(savedLocation.getId().toString(), ModerationElementType.LOCATION,
+                "Назва: ".concat(newLocation.getName()).concat(", опис: ").concat(newLocation.getDescription()));
 
         return res;
     }
@@ -791,7 +791,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         res.entityDTO = mapper.toDto(savedLocation);
 
         moderationTextEventPub.sendTextForModeration(savedLocation.getId().toString(), ModerationElementType.LOCATION,
-                savedLocation.getName().concat(" ").concat(savedLocation.getDescription()));
+                "Назва: ".concat(savedLocation.getName()).concat(", опис: ").concat(savedLocation.getDescription()));
 
         return res;
 

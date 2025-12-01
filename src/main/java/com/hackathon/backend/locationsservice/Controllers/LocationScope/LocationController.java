@@ -1,21 +1,27 @@
 package com.hackathon.backend.locationsservice.Controllers.LocationScope;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationPendingCopyReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationReadDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.LocationTypeReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Read.LocationScope.RouteReadDTO;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BuildRouteRequest;
+import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BuildRouteRequestQgis;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.RejectionReason;
 import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.LocationType;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Route;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Services.LocationScope.LocationService;
+import com.hackathon.backend.locationsservice.Services.LocationScope.RouteService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -25,6 +31,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +46,7 @@ import java.util.UUID;
 public class LocationController {
 
     private final LocationService locationService;
+    private final RouteService routeService;
 
     @GetMapping()
     @PermitAll
@@ -377,5 +388,76 @@ public class LocationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
         }
     }
+
+    @GetMapping("/routes")
+    public ResponseEntity<?> getAllRoutes(){
+        Result<Route, RouteReadDTO> result = routeService.getAll();
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTOs());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
+    @GetMapping("/routes/{route_key}")
+    public ResponseEntity<?> getRouteByKey(@PathVariable(name = "route_key") UUID routeKey){
+        Result<Route, RouteReadDTO> result = routeService.getRouteByRouteKey(routeKey);
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result.getEntityDTO());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getError());
+        }
+    }
+
+    @PostMapping("/routes")
+    public ResponseEntity<?> buildRoute(@RequestBody BuildRouteRequest request) {
+
+        // 1) Конвертація координат
+        Result<BuildRouteRequestQgis, BuildRouteRequestQgis> result =
+                routeService.convertBuildRequestCoordinates(request);
+
+        if (!result.isSuccess()) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(result.getError());
+        }
+
+        BuildRouteRequestQgis qgisRequest = result.getEntityDTO();
+
+        try {
+            // 2) Готуємо HTTP-клієнт
+            HttpClient client = HttpClient.newHttpClient();
+
+            // 3) Конвертуємо request → JSON
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonBody = mapper.writeValueAsString(qgisRequest);
+
+            // 4) POST на QGIS
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create("http://127.0.0.1:8102/run"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response =
+                    client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+            // 5) Обробка успішного результату
+            if (response.statusCode() == 200) {
+                return ResponseEntity.ok(qgisRequest);
+            }
+            //test
+//            return ResponseEntity.ok(qgisRequest);
+            // 6) Помилка QGIS — єдина точка повернення
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", response.toString()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e));
+        }
+    }
+
+
 
 }

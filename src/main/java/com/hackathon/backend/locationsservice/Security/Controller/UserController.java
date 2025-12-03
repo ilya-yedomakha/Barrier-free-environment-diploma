@@ -1,10 +1,8 @@
 package com.hackathon.backend.locationsservice.Security.Controller;
 
-import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserCreateDTO;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
-import com.hackathon.backend.locationsservice.Security.DTO.RegistrationRequestDto;
 import com.hackathon.backend.locationsservice.Security.DTO.RoleUpdateRequest;
 import com.hackathon.backend.locationsservice.Security.Domain.User;
 import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
@@ -96,6 +94,16 @@ public class UserController {
             return ResponseEntity.ok(Result.getEntityDTO());
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.getError());
+        }
+    }
+
+    @GetMapping("/check/{username}")
+    public ResponseEntity<?> checkUserExistence(@PathVariable(name = "username") String username) {
+        Result<User, UserDTO> Result = userService.getUserByUsername(username);
+        if (Result.isSuccess()) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
         }
     }
 

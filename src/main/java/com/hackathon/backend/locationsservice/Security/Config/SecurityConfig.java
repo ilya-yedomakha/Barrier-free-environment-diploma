@@ -61,7 +61,8 @@ public class SecurityConfig {
                         httpSecurityCorsConfigurer.configurationSource(request -> corsConfiguration()));
 
         http.authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/login/**","/registration/**", "/css/**", "/refresh_token/**", "/", "/swagger-ui")
+                    auth.requestMatchers("/login/**","/registration/**", "/css/**", "/refresh_token/**", "/",
+                                    "/email/**","/swagger-ui")
                             .permitAll();
                     auth.requestMatchers("/api/locations/me/**").authenticated();
                     auth.requestMatchers("/admin/**").hasAuthority("ADMIN");

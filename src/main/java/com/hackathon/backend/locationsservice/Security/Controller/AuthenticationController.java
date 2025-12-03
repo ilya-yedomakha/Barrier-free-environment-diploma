@@ -7,8 +7,9 @@ import com.hackathon.backend.locationsservice.Security.Domain.User;
 import com.hackathon.backend.locationsservice.Security.Repositories.UserRepository;
 import com.hackathon.backend.locationsservice.Security.Services.AuthenticationService;
 import com.hackathon.backend.locationsservice.Security.Services.JwtService;
-import com.hackathon.backend.locationsservice.Security.Services.UserService;
 import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
+import com.hackathon.backend.locationsservice.Services.EmailScope.EmailService;
+import com.hackathon.backend.locationsservice.Services.EmailScope.VerifyEmailCache;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.Map;
 
 @RestController
 public class AuthenticationController {
@@ -27,12 +29,18 @@ public class AuthenticationController {
     private final UserServiceImpl userService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final VerifyEmailCache cache;
 
-    public AuthenticationController(AuthenticationService authenticationService, UserServiceImpl userService, JwtService jwtService, UserRepository userRepository) {
+    public AuthenticationController(AuthenticationService authenticationService, UserServiceImpl userService,
+                                    JwtService jwtService, UserRepository userRepository, EmailService emailService,
+                                    VerifyEmailCache cache) {
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.emailService = emailService;
+        this.cache = cache;
     }
 
     @PostMapping("/registration")
@@ -108,6 +116,28 @@ public class AuthenticationController {
         } catch (Exception e) {
             return ResponseEntity.ok(false);
         }
+    }
+
+    @PostMapping("email/verification/send")
+    public ResponseEntity<?> sendCode(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String code = String.valueOf((int)(Math.random() * 900000) + 100000);
+
+        cache.saveCode(email, code);
+        emailService.sendCode(email, code);
+
+        return ResponseEntity.ok("code sent");
+    }
+
+    @PostMapping("email/verify")
+    public ResponseEntity<?> verify(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String code = body.get("code");
+
+        String saved = cache.getCode(email);
+
+        if (code.equals(saved)) return ResponseEntity.ok("verified");
+        return ResponseEntity.badRequest().body("verification failed");
     }
 
 }

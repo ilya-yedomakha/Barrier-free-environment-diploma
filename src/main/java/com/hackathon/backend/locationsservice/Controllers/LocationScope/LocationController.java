@@ -26,6 +26,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,6 +48,8 @@ public class LocationController {
 
     private final LocationService locationService;
     private final RouteService routeService;
+    @Value("${qgis.server.uri}")
+    private String qgisServerUri;
 
     @GetMapping()
     @PermitAll
@@ -434,7 +437,7 @@ public class LocationController {
 
             // 4) POST на QGIS
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(URI.create("http://127.0.0.1:8102/run"))
+                    .uri(URI.create(qgisServerUri))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                     .build();

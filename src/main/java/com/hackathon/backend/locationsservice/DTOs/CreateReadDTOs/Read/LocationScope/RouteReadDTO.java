@@ -35,7 +35,6 @@ public class RouteReadDTO {
     public String end;
     public Double cost;
     public Double cost1;
-    public String username;
 
     public UUID routeKey;
 }

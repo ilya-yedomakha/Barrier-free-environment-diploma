@@ -56,7 +56,6 @@ public class RouteMapper implements BaseMapper<Route, RouteReadDTO, RouteCreateD
         route.setStart(dto.start);
         route.setId(dto.id);
         route.setId_0(dto.id_0);
-        route.setUsername(dto.username);
         route.setUpdatedBy(dto.updatedBy);
         route.setGeom(dto.geom);
         route.setLastVerifiedBy(dto.lastVerifiedBy);
@@ -87,7 +86,6 @@ public class RouteMapper implements BaseMapper<Route, RouteReadDTO, RouteCreateD
         dto.setStart(route.getStart());
         dto.setId(route.getId());
         dto.setId_0(route.getId_0());
-        dto.setUsername(route.getUsername());
         dto.setUpdatedBy(route.getUpdatedBy());
         dto.setLastVerifiedBy(route.getLastVerifiedBy());
         dto.setLocationTypeId(route.getLocationTypeId());

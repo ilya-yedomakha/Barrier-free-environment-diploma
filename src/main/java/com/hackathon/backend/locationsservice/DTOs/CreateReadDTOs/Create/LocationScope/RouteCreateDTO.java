@@ -50,7 +50,5 @@ public class RouteCreateDTO {
 
     public Double cost1;
 
-    public String username;
-
     public UUID routeKey;
 }

@@ -84,8 +84,5 @@ public class Route{
     private Double cost1;
 
     @Column
-    private String username;
-
-    @Column
     private UUID routeKey;
 }

@@ -119,7 +119,6 @@ public class UserController {
     }
 
     @PostMapping("/")
-    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<String> register(
             @RequestBody UserCreateDTO userCreateDTO) {
 

@@ -5,14 +5,17 @@ import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.text_moderation.
 import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.text_moderation.ModerationResponse;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.Location;
+import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationPendingCopy;
 import com.hackathon.backend.locationsservice.Domain.Enums.LocationStatusEnum;
 import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
+import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationPendingCopyRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +26,8 @@ import java.util.UUID;
 public class ModerationTextResultListener {
 
     private final LocationRepository locationRepository;
-    BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository;
+    private final LocationPendingCopyRepository locationPendingCopyRepository;
+    private final BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository;
 
     @RabbitListener(queues = "${amqp.queue.moderation.response}")
     public void handleModerationResponse(ModerationResponse response) {
@@ -35,7 +39,7 @@ public class ModerationTextResultListener {
                 Location location = locationRepository.
                         findById(UUID.fromString(response.getRequestId())).orElse(null);
 
-                if(location != null) {
+                if(location != null && location.getStatus() != LocationStatusEnum.published) {
 
                    switch (response.getResult().getCategory()) {
                        case SAFE -> {
@@ -44,7 +48,12 @@ public class ModerationTextResultListener {
                        case UNKNOWN -> {
                            location.setStatus(LocationStatusEnum.pending);
                        }
-                       default -> location.setStatus(LocationStatusEnum.rejected);
+                       default -> {
+                           location.setRejectionReason("Не пройшло перевірку штучним інтелектом");
+                           location.setLastVerifiedAt(LocalDateTime.now());
+                           location.setLastVerifiedBy(null);
+                           location.setStatus(LocationStatusEnum.rejected);
+                       }
                    }
 
                     locationRepository.save(location);
@@ -70,6 +79,32 @@ public class ModerationTextResultListener {
             }
             case COMMENT -> {
                 //якщо будуть коментарі
+            }
+            case PENDING -> {
+                LocationPendingCopy pendingCopy = locationPendingCopyRepository.
+                        findById(Long.valueOf(response.getRequestId())).orElse(null);
+
+                if(pendingCopy != null) {
+
+                    switch (response.getResult().getCategory()) {
+                        case SAFE -> {
+                            pendingCopy.setStatus(LocationStatusEnum.published);
+                        }
+                        case UNKNOWN -> {
+                            pendingCopy.setStatus(LocationStatusEnum.pending);
+                        }
+                        default -> {
+                            pendingCopy.setRejectionReason("Не пройшло перевірку штучним інтелектом");
+                            pendingCopy.setRejectedAt(LocalDateTime.now());
+                            pendingCopy.setName("****");
+                            pendingCopy.setDescription("****");
+                            pendingCopy.setRejectedBy(null);
+                            pendingCopy.setStatus(LocationStatusEnum.rejected);
+                        }
+                    }
+
+                    locationPendingCopyRepository.save(pendingCopy);
+                }
             }
             default -> {
 

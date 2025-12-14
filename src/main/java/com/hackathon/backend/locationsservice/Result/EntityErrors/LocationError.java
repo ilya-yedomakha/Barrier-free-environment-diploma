@@ -36,4 +36,11 @@ public class LocationError {
                 "You can't edit location that was not verified yet."
         );
     }
+
+    public static Error locationPublishedUpdateFromDuplicateImpossible(UUID locationId) {
+        return new Error(
+                Location.class.getSimpleName() + ".duplicateUpdateForPublishedImpossible",
+                "You can't merge published location "+ locationId + " with similar location"
+        );
+    }
 }

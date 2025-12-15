@@ -418,9 +418,6 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (!oldLocation.getId().equals(locationPendingCopy.getLocation().getId())) {
             return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));
         }
-        if (oldLocation.getStatus().equals(LocationStatusEnum.published)) {
-            return Result.failure(LocationError.locationPublishedUpdateFromDuplicateImpossible(locationId));
-        }
         List<Location> locations = repository.findAll();
         locations.remove(oldLocation);
         if (checkNameDuplicates(locations, locationPendingCopyCreateDTO.getName())) {
@@ -475,6 +472,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         if (locationOptional.isEmpty()) {
             return Result.failure(EntityError.notFound(Location.class, locationId));
         }
+
 //        Optional<LocationPendingCopy> locationPendingCopyOptional = locationPendingCopyRepository.findById(locationPendingCopyId);
 //        if (locationPendingCopyOptional.isEmpty()) {
 //            return Result.failure(EntityError.notFound(LocationPendingCopy.class, locationPendingCopyId));
@@ -486,6 +484,9 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
         Location newLocation = locationOptional.get();
         Location duplLocation = duplicateOptional.get();
+        if (duplLocation.getStatus().equals(LocationStatusEnum.published)) {
+            return Result.failure(LocationError.locationPublishedUpdateFromDuplicateImpossible(duplicateId));
+        }
 //        if (!oldLocation.getId().equals(locationPendingCopy.getLocation().getId())) {
 //            return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));
 //        }

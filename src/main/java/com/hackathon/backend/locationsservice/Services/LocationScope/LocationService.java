@@ -484,8 +484,9 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
         Location newLocation = locationOptional.get();
         Location duplLocation = duplicateOptional.get();
-        if (duplLocation.getStatus().equals(LocationStatusEnum.published)) {
-            return Result.failure(LocationError.locationPublishedUpdateFromDuplicateImpossible(duplicateId));
+        //TODO rename so it resembles that we take duplicate and insert it in location
+        if (newLocation.getStatus().equals(LocationStatusEnum.published)) {
+            return Result.failure(LocationError.locationPublishedUpdateFromDuplicateImpossible(locationId));
         }
 //        if (!oldLocation.getId().equals(locationPendingCopy.getLocation().getId())) {
 //            return Result.failure(LocationError.locationMismatch(locationId, locationPendingCopy.getLocation().getId()));

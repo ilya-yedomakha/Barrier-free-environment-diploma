@@ -1,23 +1,25 @@
 package com.hackathon.backend.locationsservice.Aspects;
 
 import com.hackathon.backend.locationsservice.AMPQElements.ModerationTextEventPub;
+import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.BarrierlessCriteriaScope.BarrierlessCriteriaCheckCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.RabbitMQDTOs.text_moderation.ModerationElementType;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheckEmbeddedId;
 import com.hackathon.backend.locationsservice.Domain.Core.LocationScope.additional.LocationScoreChg;
+import com.hackathon.backend.locationsservice.Repositories.BarrierlessCriteriaScope.BarrierlessCriteriaCheckRepository;
 import com.hackathon.backend.locationsservice.Repositories.LocationScope.LocationScoreChgRepository;
 import com.hackathon.backend.locationsservice.Result.Result;
 import lombok.AllArgsConstructor;
-import org.aspectj.lang.annotation.After;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Aspect
@@ -26,6 +28,7 @@ import java.util.UUID;
 public class AspectLocationScore {
 
     private final LocationScoreChgRepository locationScoreChgRepository;
+    private final BarrierlessCriteriaCheckRepository barrierlessCriteriaCheckRepository;
     private final Logger log = LoggerFactory.getLogger(AspectLocationScore.class);
     private final ModerationTextEventPub moderationTextEventPub;
 
@@ -94,31 +97,61 @@ public class AspectLocationScore {
     }
 
 
-    @AfterReturning(pointcut = "addAllMethod()", returning = "result")
-    public void afterAddAll(Object result) {
+    @Around("addAllMethod()")
+    public Object aroundAddAll(ProceedingJoinPoint pjp) throws Throwable {
 
-        if (result instanceof Result<?, ?> res) {
+        Object[] args = pjp.getArgs();
 
-            Object entities = res.getEntities();
+        List<BarrierlessCriteriaCheckCreateDTO> dtos =
+                (List<BarrierlessCriteriaCheckCreateDTO>) args[0];
 
-            if (entities instanceof List<?> list) {
-                for (Object entity : list) {
-                    if (entity instanceof BarrierlessCriteriaCheck added) {
+        Map<BarrierlessCriteriaCheckEmbeddedId, String> oldComments = new HashMap<>();
 
-                        UUID id = added.getLocation().getId();
+        for (BarrierlessCriteriaCheckCreateDTO dto : dtos) {
 
-                        LocationScoreChg locChg = new LocationScoreChg();
-                        locChg.setLocationId(id);
-                        locationScoreChgRepository.save(locChg);
+            BarrierlessCriteriaCheckEmbeddedId id =
+                    new BarrierlessCriteriaCheckEmbeddedId(
+                            dto.getLocationId(),
+                            dto.getBarrierlessCriteriaId(),
+                            dto.getUserId()
+                    );
 
-                        log.info("LocationScoreChgRepository saved(after addAll()): " + locChg.getLocationId());
+            barrierlessCriteriaCheckRepository.findById(id)
+                    .ifPresent(old ->
+                            oldComments.put(id, old.getComment())
+                    );
+        }
 
-                        moderateCheck(added);
-                    }
+        Object result = pjp.proceed();
+
+        if (result instanceof Result<?, ?> res &&
+                res.getEntities() instanceof List<?> list) {
+
+            for (Object o : list) {
+
+                if (!(o instanceof BarrierlessCriteriaCheck check)) {
+                    continue;
+                }
+
+                UUID locationId = check.getLocation().getId();
+                LocationScoreChg locChg = new LocationScoreChg();
+                locChg.setLocationId(locationId);
+                locationScoreChgRepository.save(locChg);
+
+                String oldComment =
+                        oldComments.get(check.getBarrierlessCriteriaCheckId());
+
+                if (oldComment == null ||
+                        !oldComment.equals(check.getComment())) {
+
+                    moderateCheck(check);
                 }
             }
         }
+
+        return result;
     }
+
 
     private void moderateCheck(BarrierlessCriteriaCheck added) {
         BarrierlessCriteriaCheck check = added;
@@ -126,8 +159,8 @@ public class AspectLocationScore {
         BarrierlessCriteriaCheckEmbeddedId embeddedId = check.getBarrierlessCriteriaCheckId();
 
         String requestId = String.join(",",
-                embeddedId.getLocationId().toString(),
                 embeddedId.getBarrierlessCriteriaId().toString(),
+                embeddedId.getLocationId().toString(),
                 embeddedId.getUserId().toString());
 
         moderationTextEventPub.sendTextForModeration(requestId, ModerationElementType.CHECK, check.getComment());

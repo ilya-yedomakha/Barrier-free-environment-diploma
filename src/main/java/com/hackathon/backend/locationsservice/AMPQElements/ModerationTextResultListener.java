@@ -70,11 +70,12 @@ public class ModerationTextResultListener {
                         findAllByBarrierlessCriteria_IdAndLocation_IdAndUser_Id(
                                 uuidList.get(0),uuidList.get(1),uuidList.get(2)).orElse(null);
 
-
+                System.out.println("////////////////////////////////CHECK:" + check);
                 if (check != null && response.getResult().getCategory() != ModerationCategory.SAFE &&
                         response.getResult().getCategory() != ModerationCategory.UNKNOWN) {
-
+                    System.out.println("////////////////////////////////CHECK IN IF:" + check);
                     barrierlessCriteriaCheckRepository.delete(check);
+
                 }
             }
             case COMMENT -> {

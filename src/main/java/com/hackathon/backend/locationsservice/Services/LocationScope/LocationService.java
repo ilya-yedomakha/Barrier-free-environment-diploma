@@ -1,6 +1,5 @@
 package com.hackathon.backend.locationsservice.Services.LocationScope;
 
-import com.hackathon.backend.locationsservice.AMPQElements.LocationCreationEventPub;
 import com.hackathon.backend.locationsservice.AMPQElements.ModerationTextEventPub;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationCreateDTO;
 import com.hackathon.backend.locationsservice.DTOs.CreateReadDTOs.Create.LocationScope.LocationPendingCopyCreateDTO;
@@ -17,7 +16,6 @@ import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteri
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.BarrierlessCriteriaScope.BarrierlessCriteriaTypeDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.LocationTypeWithGroupDTO;
 import com.hackathon.backend.locationsservice.DTOs.RecordDTOs.LocationScope.RejectionReason;
-import com.hackathon.backend.locationsservice.DTOs.SimilarLocationDTO;
 import com.hackathon.backend.locationsservice.DTOs.ViewLists.LocationListViewDTO;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteria;
 import com.hackathon.backend.locationsservice.Domain.Core.BarrierlessCriteriaScope.BarrierlessCriteriaCheck;
@@ -40,11 +38,8 @@ import com.hackathon.backend.locationsservice.Result.EntityErrors.LocationError;
 import com.hackathon.backend.locationsservice.Result.EntityErrors.UserError;
 import com.hackathon.backend.locationsservice.Result.Result;
 import com.hackathon.backend.locationsservice.Security.DTO.Domain.UserDTO;
-import com.hackathon.backend.locationsservice.Security.Domain.User;
-import com.hackathon.backend.locationsservice.Security.Services.UserService;
 import com.hackathon.backend.locationsservice.Security.Services.UserServiceImpl;
 import com.hackathon.backend.locationsservice.Services.GeneralService;
-import com.hackathon.backend.locationsservice.Services.util.StringSimilarity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
@@ -431,6 +426,7 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
         oldLocation.setDescription(locationPendingCopyCreateDTO.getDescription());
         oldLocation.setContacts(locationPendingCopyCreateDTO.getContacts());
         oldLocation.setStatus(LocationStatusEnum.published);
+        oldLocation.setImageServiceId(locationPendingCopyCreateDTO.getImageServiceId());
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = null;

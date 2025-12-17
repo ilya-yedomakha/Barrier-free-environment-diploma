@@ -118,6 +118,7 @@ public class LocationController {
 //    }
     @Deprecated
     @PutMapping("/merge/{new_location_id}/into/{old_location_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> mergeBarrierLocationChecks(@PathVariable(name = "new_location_id") UUID newLocationId, @PathVariable(name = "old_location_id") UUID oldLocationId) {
         Result<Location, LocationReadDTO> Result = locationService.mergeBarrierLocationChecks(newLocationId, oldLocationId);
         if (Result.isSuccess()) {
@@ -128,6 +129,7 @@ public class LocationController {
     }
 
     @PutMapping("/{location_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @RequestBody LocationCreateDTO locationCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.update(locationId, locationCreateDTO);
         if (Result.isSuccess()) {
@@ -138,6 +140,7 @@ public class LocationController {
     }
 
     @DeleteMapping("/{location_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> delete(@PathVariable(name = "location_id") UUID locationId) {
         Result<Location, LocationReadDTO> Result = locationService.deleteLocation(locationId);
         if (Result.isSuccess()) {
@@ -148,6 +151,7 @@ public class LocationController {
     }
 
     @DeleteMapping("/pending_copy/{pending_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> delete(@PathVariable(name = "pending_id") Long pendingId) {
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.deletePending(pendingId);
         if (Result.isSuccess()) {
@@ -158,6 +162,7 @@ public class LocationController {
     }
 
     @PatchMapping("/{location_id}/status/{status}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> changeStatus(
             @PathVariable("location_id") UUID locationId,
             @PathVariable("status") String status,
@@ -179,6 +184,7 @@ public class LocationController {
 
 
     @PutMapping("/{location_id}/pending_copy/{pending_copy_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "pending_copy_id") Long pendingCopyId, @RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.update(locationId, pendingCopyId, locationPendingCopyCreateDTO);
         if (Result.isSuccess()) {
@@ -189,6 +195,7 @@ public class LocationController {
     }
 
     @PutMapping("/{location_id}/duplicate/{duplicate_id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> update(@PathVariable(name = "location_id") UUID locationId, @PathVariable(name = "duplicate_id") UUID duplicateId, @RequestBody LocationPendingCopyCreateDTO locationPendingCopyCreateDTO) {
         Result<Location, LocationReadDTO> Result = locationService.updateByDuplicate(locationId, duplicateId, locationPendingCopyCreateDTO);
         if (Result.isSuccess()) {
@@ -287,6 +294,7 @@ public class LocationController {
     }
 
     @GetMapping("/user/{username}/pending-locations/")
+    @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> getUserPendingLocationsByUsername(@PathVariable(name = "username") String username) {
         Result<LocationPendingCopy, LocationPendingCopyReadDTO> Result = locationService.getUserPendingLocationsByUsername(username);
         if (Result.isSuccess()) {

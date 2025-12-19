@@ -524,7 +524,6 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
 
         duplLocation.setOrganizationId(locationPendingCopyCreateDTO.getOrganizationId());
         duplLocation.setWorkingHours(locationPendingCopyCreateDTO.getWorkingHours());
-        duplLocation.setImageServiceId(newLocation.getImageServiceId());
 
         Location savedLocation = repository.save(duplLocation);
         repository.delete(newLocation);

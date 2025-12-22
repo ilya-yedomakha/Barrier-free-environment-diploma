@@ -854,32 +854,95 @@ public class LocationService extends GeneralService<LocationMapper, LocationRead
     public List<LocationReadDTO> findSimilar(LocationCreateDTO newLocDTO) {
         Location newLoc = mapper.toEntity(newLocDTO);
 
-        List<Location> nearbySimilar = repository.findNearbySimilarLocations(
-                newLoc.getCoordinates().getY(),  // lat
-                newLoc.getCoordinates().getX(),  // lng
-                newLoc.getName(),
-                newLoc.getAddress()
-        );
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+        boolean isAdmin = false;
 
-        return nearbySimilar.stream().map(mapper::toDto).toList();
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            if (isAdmin) {
+                List<Location> nearbySimilar = repository.findNearbySimilarLocations(
+                        newLoc.getCoordinates().getY(),  // lat
+                        newLoc.getCoordinates().getX(),  // lng
+                        newLoc.getName(),
+                        newLoc.getAddress()
+                );
+
+                return nearbySimilar.stream().map(mapper::toDto).toList();
+            } else {
+                List<Location> nearbySimilar = repository.findNearbySimilarLocationsPublishedOnly(
+                        newLoc.getCoordinates().getY(),  // lat
+                        newLoc.getCoordinates().getX(),  // lng
+                        newLoc.getName(),
+                        newLoc.getAddress()
+                );
+
+                return nearbySimilar.stream().map(mapper::toDto).toList();
+            }
+        }
+
+        List<LocationReadDTO> emptyList = new ArrayList<>();
+
+        return emptyList;
     }
 
     public List<LocationReadDTO> findSimilarById(UUID id) {
         Location current = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + id));
 
-        List<Location> nearbySimilar = repository.findNearbySimilarLocations(
-                current.getCoordinates().getY(),  // lat
-                current.getCoordinates().getX(),  // lng
-                current.getName(),
-                current.getAddress()
-        );
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+        UUID userId = null;
+        boolean isAuthenticated = false;
+        boolean isAdmin = false;
 
-        // 🔹 Відфільтровуємо саму локацію
-        return nearbySimilar.stream()
-                .filter(loc -> !Objects.equals(loc.getId(), id))
-                .map(mapper::toDto)
-                .toList();
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+            isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+            isAuthenticated = true;
+        }
+        if (isAuthenticated && username != null) {
+            if (isAdmin) {
+                List<Location> nearbySimilar = repository.findNearbySimilarLocations(
+                        current.getCoordinates().getY(),  // lat
+                        current.getCoordinates().getX(),  // lng
+                        current.getName(),
+                        current.getAddress()
+                );
+
+                return nearbySimilar.stream()
+                        .filter(loc -> !Objects.equals(loc.getId(), id))
+                        .map(mapper::toDto)
+                        .toList();
+            } else {
+                List<Location> nearbySimilar = repository.findNearbySimilarLocationsPublishedOnly(
+                        current.getCoordinates().getY(),  // lat
+                        current.getCoordinates().getX(),  // lng
+                        current.getName(),
+                        current.getAddress()
+                );
+
+                return nearbySimilar.stream()
+                        .filter(loc -> !Objects.equals(loc.getId(), id))
+                        .map(mapper::toDto)
+                        .toList();
+            }
+        }
+
+        List<LocationReadDTO> emptyList = new ArrayList<>();
+
+        return emptyList;
+
     }
 
 

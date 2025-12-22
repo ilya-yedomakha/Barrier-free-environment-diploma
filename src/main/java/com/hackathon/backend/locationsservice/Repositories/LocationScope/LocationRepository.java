@@ -41,6 +41,33 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
             @Param("address") String address
     );
 
+    @Query(value = """
+    SELECT *
+    FROM geo_score_schema.locations l
+    WHERE l.status = 'published'
+      AND ST_DWithin(
+              l.coordinates,
+              ST_SetSRID(ST_MakePoint(:lng, :lat), 5564),
+              100
+          )
+      AND (
+          similarity(LOWER(l.name), LOWER(:name)) > 0.3
+          OR similarity(LOWER(l.address), LOWER(:address)) > 0.3
+      )
+    ORDER BY (
+        similarity(LOWER(l.name), LOWER(:name))
+        + similarity(LOWER(l.address), LOWER(:address))
+    ) DESC
+    LIMIT 20
+    """, nativeQuery = true)
+    List<Location> findNearbySimilarLocationsPublishedOnly(
+            @Param("lat") double lat,
+            @Param("lng") double lng,
+            @Param("name") String name,
+            @Param("address") String address
+    );
+
+
     List<Location> findAllByCreatedBy(UUID userId);
 
     List<Location> findAllByUpdatedBy(UUID userId);

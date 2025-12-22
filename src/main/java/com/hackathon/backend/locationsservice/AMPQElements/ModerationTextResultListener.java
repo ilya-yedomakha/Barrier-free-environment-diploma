@@ -89,7 +89,7 @@ public class ModerationTextResultListener {
 
                     switch (response.getResult().getCategory()) {
                         case SAFE -> {
-                            pendingCopy.setStatus(LocationStatusEnum.published);
+                            pendingCopy.setStatus(LocationStatusEnum.pending);
                         }
                         case UNKNOWN -> {
                             pendingCopy.setStatus(LocationStatusEnum.pending);
